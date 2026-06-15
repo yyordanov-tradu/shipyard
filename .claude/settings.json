@@ -1,0 +1,22 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/validate-skill-meta.sh\"",
+            "statusMessage": "Validating skill frontmatter..."
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PROJECT_DIR:-.}/.claude/hooks/test-changed-skill.sh\"",
+            "timeout": 60,
+            "statusMessage": "Running changed skill's tests..."
+          }
+        ]
+      }
+    ]
+  }
+}

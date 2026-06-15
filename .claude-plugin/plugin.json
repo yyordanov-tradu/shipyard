@@ -1,0 +1,16 @@
+{
+  "name": "shipyard",
+  "version": "0.1.0",
+  "description": "A gated AI-SDLC pipeline: spec → plan → plan-readiness gate → implement → expert-panel code gate. Each stage is a skill; the two review skills are inspection gates that must pass before work moves on.",
+  "author": {
+    "name": "yyordanov",
+    "email": "yyordanov@tradu.com"
+  },
+  "keywords": [
+    "sdlc",
+    "workflow",
+    "code-review",
+    "plan-review",
+    "quality-gates"
+  ]
+}
