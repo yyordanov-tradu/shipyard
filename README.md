@@ -14,10 +14,10 @@ Each stage is a skill. The two **gates** are the skills you already rely on:
 
 | Stage | Skill | What it does | Tools it uses |
 |---|---|---|---|
-| spec | `spec` | turn an idea into a spec (planned) | superpowers (engine) |
-| plan | `plan` | turn a spec into a build plan (planned) | superpowers (engine) |
+| spec | `guided-spec-writing` | turn an idea into a spec (planned) | shipyard-owned (engine TBD) |
+| plan | `expert-advised-planning` ✅ | turn a spec/ticket into a plan; lead drafts after an expert panel advises, conflicts arbitrated, escalated to a human when uncertain/high-stakes | graphify, expert subagents |
 | **plan gate** | `plan-readiness-review` ✅ | spec ↔ plan alignment; panel argues to consensus. Verdict: READY / NEEDS-WORK / MISALIGNED | git, graphify, expert subagents |
-| implement | `implement` | build the plan task-by-task with TDD (planned) | superpowers (engine), Serena (find), Claude Code (edit) |
+| implement | `test-driven-implementation` | build the plan task-by-task with TDD (planned) | Serena (find), Claude Code (edit) |
 | **code gate** | `expert-panel-review` ✅ | multi-expert diff/PR review; findings verified by 3 skeptics | git, gh, graphify, expert subagents |
 
 Both gates run as local dynamic workflows, ground themselves in the codebase via **graphify**, and save reports under the project's `docs/reviews/`.
@@ -40,20 +40,20 @@ Planned stages add two more:
 | Tool | Needed for | State |
 |---|---|---|
 | **Serena** (MCP) | symbol-level semantic **search/navigation** (find symbols & references) in the `implement` stage — edits stay with Claude Code | planned |
-| **superpowers** | engine for `spec` / `plan` / `implement` — to be **vendored**, so it stops being a runtime dependency once integrated | transitional |
+| **superpowers** | *not a runtime dependency.* It was useful inspiration while authoring the stages, but each shipyard stage carries its own logic and runs with superpowers absent. `expert-advised-planning` already does (it ships its own plan-format guide) | not required |
 
 **Per-project wiring:** graphify (and later Serena) are configured in each *target* repo's `.mcp.json`, not in shipyard. shipyard stays generic; each project brings its own MCP tools, rules, and conventions.
 
 ## Status
 
-Early. The two review gates are built and tested. The generative stages (spec, plan, implement) are planned — see [docs/flow.md](docs/flow.md) for the full design and roadmap.
+Early. The two review gates and the plan stage are built and tested. The remaining generative stages (spec, implement) are planned — see [docs/flow.md](docs/flow.md) for the full design and roadmap.
 
 | Stage | Skill | State |
 |---|---|---|
-| spec | `spec` | planned |
-| plan | `plan` | planned |
+| spec | `guided-spec-writing` | planned |
+| plan | `expert-advised-planning` | ✅ built + tested |
 | plan gate | `plan-readiness-review` | ✅ built + tested |
-| implement | `implement` | planned |
+| implement | `test-driven-implementation` | planned |
 | code gate | `expert-panel-review` | ✅ built + tested |
 
 ## Install (team)
@@ -80,7 +80,9 @@ Until this is published to a shared marketplace, install from the local path:
 shipyard/
   .claude-plugin/plugin.json     plugin manifest
   skills/
+    expert-advised-planning/     plan stage (SKILL.md + DESIGN.md + PLAN.md + tests/)
     plan-readiness-review/       plan gate (SKILL.md + DESIGN.md + PLAN.md + tests/)
     expert-panel-review/         code gate (SKILL.md + DESIGN.md + PLAN.md + tests/)
   docs/flow.md                   pipeline design + roadmap
+  (workflow JS lives in ~/.claude/workflows/, installed alongside the skills)
 ```

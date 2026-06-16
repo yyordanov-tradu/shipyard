@@ -8,9 +8,14 @@ plugin so a whole team gets the identical pipeline from one install.
 
 ```
 spec  →  plan  →  [PLAN GATE]  →  implement  →  [CODE GATE]
-                  plan-readiness              expert-panel
-                    -review ✅                  -review ✅
+guided-  expert-   plan-          test-driven-  expert-
+spec-    advised-  readiness      implementation panel-
+writing  planning  -review ✅                    -review ✅
+              ✅
 ```
+
+Skills are named `<modifier>-<activity>`; a `-review` suffix marks a gate (it judges), an
+activity noun marks a generative stage (it builds).
 
 ## Why gates
 
@@ -62,7 +67,7 @@ owner.
 
 | Job | Owner | Phase |
 |---|---|---|
-| Understand the architecture (the map) | **graphify** | review gates |
+| Understand the architecture (the map) | **graphify** | plan creation + review gates |
 | Find code precisely (symbols, references) | **Serena** — search/navigation only | building |
 | Change code (every edit) | **Claude Code** native tools (Edit / Write) | building |
 
@@ -80,7 +85,9 @@ community clusters, surprising cross-module connections, and dependency paths �
 architecture questions at a small fraction of the tokens of reading raw files. That is
 exactly what the `plan-readiness-review` gate needs to judge whether a plan fits the real
 structure; the code gate also uses it to ground the expert reviewers. The `plan` *creation*
-stage does not use it — plans come purely from the engine. Read-only.
+stage (`expert-advised-planning`) now uses it too — advisers and the arbiter ground their
+reasoning in the real codebase, falling back to smart-explore/grep when graphify is absent.
+Read-only throughout.
 
 Source: <https://graphify.net/> · MCP tools `query_graph`, `get_node`, `get_neighbors`,
 `shortest_path`.
@@ -109,15 +116,15 @@ agents** staff both panels. Each target repo wires the MCP tools it needs in its
 ## Roadmap
 
 1. **Done** — `plan-readiness-review` (plan gate), `expert-panel-review` (code gate).
-2. **Plugin shell** — manifest, README, this doc, the two gates hosted, git repo. ← here.
-3. **`plan` skill** — highest-value next build. It pins the plan format that both gates and
-   the implement stage depend on. Vendor the planning engine, emit shipyard's plan template
-   (task checkboxes, dispatch preamble, review checkpoints). Plan creation is purely the
-   engine; graphify enters later, at the plan gate.
-4. **`implement` skill** — wrap the TDD execution engine; load project rules; use
+2. **Plugin shell** — manifest, README, this doc, the two gates hosted, git repo.
+3. **Done** — `expert-advised-planning` (the `plan` stage). A lead drafts the plan after an
+   expert panel advises, conflicts are arbitrated, and uncertain/high-stakes ones escalate to
+   the human. It pins the plan format both gates and the implement stage depend on, carries its
+   own plan-format guide (self-contained), and grounds advisers + arbiter in graphify. ← here.
+4. **`implement` skill** (`test-driven-implementation`) — TDD execution; load project rules; use
    **Serena** to locate symbols/references and **Claude Code** to edit; run tests each task;
    hand off to the code gate.
-5. **`spec` skill** — lowest coupling, can come last.
+5. **`spec` skill** (`guided-spec-writing`) — lowest coupling, can come last.
 6. **Enforcement** — make the gates non-skippable: a hook or CI check that the plan gate
    returned READY before implementation, and the code gate runs in the PR pipeline.
 7. **Distribution** — shared git remote + `.claude-plugin/marketplace.json` so the team
