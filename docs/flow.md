@@ -127,8 +127,11 @@ agents** staff both panels. Each target repo wires the MCP tools it needs in its
 5. **`spec` skill** (`guided-spec-writing`) — lowest coupling, can come last.
 6. **Enforcement** — make the gates non-skippable: a hook or CI check that the plan gate
    returned READY before implementation, and the code gate runs in the PR pipeline.
-7. **Distribution** — shared git remote + `.claude-plugin/marketplace.json` so the team
-   installs with `/plugin marketplace add <remote>` then `/plugin install shipyard`.
+7. **Distribution** — the deterministic engines now ship **inside** the plugin (`workflows/`)
+   and a `SessionStart` hook (`hooks/hooks.json` → `hooks/install-workflows.sh`) installs them
+   into `~/.claude/workflows/` on session start, using `${CLAUDE_PLUGIN_ROOT}`. So the plugin is
+   self-contained on install. Still pending: a shared git remote + `.claude-plugin/marketplace.json`
+   so the team installs with `/plugin marketplace add <remote>` then `/plugin install shipyard`.
 
 ## Build order rationale
 

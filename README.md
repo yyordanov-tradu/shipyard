@@ -65,7 +65,11 @@ Until this is published to a shared marketplace, install from the local path:
 /plugin install shipyard
 ```
 
-(Distribution via a shared git remote + marketplace entry is a follow-up — see docs/flow.md.)
+On install, a **SessionStart hook** (`hooks/hooks.json` → `hooks/install-workflows.sh`) copies the
+bundled engines in `workflows/` into your `~/.claude/workflows/`, so the skills find them. It runs
+on every session start, is idempotent, and uses `${CLAUDE_PLUGIN_ROOT}` to locate the bundle — so it
+works from any install path. (Publishing via a shared git remote + marketplace entry is still a
+follow-up — see docs/flow.md.)
 
 ## Design principles
 
@@ -83,6 +87,8 @@ shipyard/
     expert-advised-planning/     plan stage (SKILL.md + DESIGN.md + PLAN.md + tests/)
     plan-readiness-review/       plan gate (SKILL.md + DESIGN.md + PLAN.md + tests/)
     expert-panel-review/         code gate (SKILL.md + DESIGN.md + PLAN.md + tests/)
+  workflows/                     the deterministic engines (one .js per skill) — bundled
+  hooks/hooks.json               SessionStart hook that installs workflows/ → ~/.claude/workflows/
+  hooks/install-workflows.sh     the installer it runs
   docs/flow.md                   pipeline design + roadmap
-  (workflow JS lives in ~/.claude/workflows/, installed alongside the skills)
 ```
