@@ -7,12 +7,14 @@ catch problems early (in the plan) and late (in the code). It is built as a Clau
 plugin so a whole team gets the identical pipeline from one install.
 
 ```
-spec  →  plan  →  [PLAN GATE]  →  implement  →  [CODE GATE]
-guided-  expert-   plan-          test-driven-  expert-
-spec-    advised-  readiness      implementation panel-
-writing  planning  -review ✅                    -review ✅
-              ✅
+Jira ticket  →  plan  →  [PLAN GATE]  →  implement  →  [CODE GATE]
+                expert-   plan-          test-driven-  expert-
+                advised-  readiness      implementation panel-
+                planning  -review ✅                   -review ✅
+                   ✅
 ```
+
+Work enters as a Jira ticket; there is no separate spec-authoring stage.
 
 Skills are named `<modifier>-<activity>`; a `-review` suffix marks a gate (it judges), an
 activity noun marks a generative stage (it builds).
@@ -20,7 +22,7 @@ activity noun marks a generative stage (it builds).
 ## Why gates
 
 The plan is the contract that gets implemented. If the plan is wrong or drifts from the
-spec, every line of code built from it is wrong. So we check **alignment before code**
+ticket, every line of code built from it is wrong. So we check **alignment before code**
 (plan gate) and **result after code** (code gate). The two gates are the high-value parts
 and they already exist.
 
@@ -28,9 +30,8 @@ and they already exist.
 
 | Stage | Owns | Does NOT do |
 |---|---|---|
-| `spec` | turn an idea into a clear spec | design the implementation |
-| `plan` | turn the spec into a task-by-task build plan in shipyard's format | write code |
-| `plan-readiness-review` | judge spec↔plan alignment, return READY / NEEDS-WORK / MISALIGNED | fix the plan |
+| `plan` | turn the ticket into a task-by-task build plan in shipyard's format | write code |
+| `plan-readiness-review` | judge ticket↔plan alignment, return READY / NEEDS-WORK / MISALIGNED | fix the plan |
 | `implement` | build the plan with TDD, using the right tools | re-decide the design |
 | `expert-panel-review` | judge the diff, verify findings with skeptics | merge or deploy |
 
@@ -38,7 +39,7 @@ and they already exist.
 
 - **Engine** = the thinking (brainstorming dialogue, planning reasoning, TDD execution).
   Reuse a proven engine (superpowers) — do not reinvent it.
-- **Interface** = the artifacts that pass between stages (`spec.md`, `plan.md`, the review
+- **Interface** = the artifacts that pass between stages (`plan.md` and the review
   reports). These must be **shipyard's** and **stable**, because the gates and the
   implement stage are coupled to their shape.
 
@@ -52,7 +53,7 @@ every CI runner, plus version drift you do not control — which would let an up
 silently break the gates. So:
 
 - **Vendor** the engine skills we use (copy + adapt into shipyard). One install, full
-  control, no drift. This is the plan for `spec` / `plan` / `implement`.
+  control, no drift. This is the plan for `plan` / `implement`.
 - Treat superpowers as a **reference implementation**, not a runtime dependency.
 - Check the engine's license before copying; keep attribution.
 
@@ -124,10 +125,9 @@ agents** staff both panels. Each target repo wires the MCP tools it needs in its
 4. **`implement` skill** (`test-driven-implementation`) — TDD execution; load project rules; use
    **Serena** to locate symbols/references and **Claude Code** to edit; run tests each task;
    hand off to the code gate.
-5. **`spec` skill** (`guided-spec-writing`) — lowest coupling, can come last.
-6. **Enforcement** — make the gates non-skippable: a hook or CI check that the plan gate
+5. **Enforcement** — make the gates non-skippable: a hook or CI check that the plan gate
    returned READY before implementation, and the code gate runs in the PR pipeline.
-7. **Distribution** — the deterministic engines ship **inside** the plugin (`workflows/`). Each
+6. **Distribution** — the deterministic engines ship **inside** the plugin (`workflows/`). Each
    skill invokes the Workflow tool with `scriptPath: ${CLAUDE_PLUGIN_ROOT}/workflows/<skill>.js`,
    so the engine is read straight from the install location — no copy step, nothing written to
    `~/.claude/`. So the plugin is self-contained on install. Still pending: a shared git remote +
@@ -136,6 +136,6 @@ agents** staff both panels. Each target repo wires the MCP tools it needs in its
 
 ## Build order rationale
 
-`plan` before `implement` before `spec`: the plan is the contract everything downstream
-reads, so locking its format first stabilizes the whole chain. `spec` is loosely coupled,
-so it is safe to do last.
+`plan` before `implement`: the plan is the contract everything downstream reads, so locking
+its format first stabilizes the whole chain. With the plan format pinned and both gates in
+place, `implement` is the last stage to build.

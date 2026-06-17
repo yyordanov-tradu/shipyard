@@ -5,18 +5,17 @@ A gated AI-SDLC pipeline for Claude Code, built to be shared across a team and m
 Work enters, moves through stages, and passes inspection gates before it ships — like a real shipyard.
 
 ```
-spec  →  plan  →  [PLAN GATE]  →  implement  →  [CODE GATE]
-                  plan-readiness              expert-panel
-                    -review                     -review
+Jira ticket  →  plan  →  [PLAN GATE]  →  implement  →  [CODE GATE]
+                         plan-readiness              expert-panel
+                           -review                     -review
 ```
 
-Each stage is a skill. The two **gates** are the skills you already rely on:
+Work enters as a Jira ticket. Each stage is a skill; the two **gates** are the skills you already rely on:
 
 | Stage | Skill | What it does | Tools it uses |
 |---|---|---|---|
-| spec | `guided-spec-writing` | turn an idea into a spec (planned) | shipyard-owned (engine TBD) |
-| plan | `expert-advised-planning` ✅ | turn a spec/ticket into a plan; lead drafts after an expert panel advises, conflicts arbitrated, escalated to a human when uncertain/high-stakes | graphify, expert subagents |
-| **plan gate** | `plan-readiness-review` ✅ | spec ↔ plan alignment; panel argues to consensus. Verdict: READY / NEEDS-WORK / MISALIGNED | git, graphify, expert subagents |
+| plan | `expert-advised-planning` ✅ | turn a Jira ticket (or pasted spec) into a plan; lead drafts after an expert panel advises, conflicts arbitrated, escalated to a human when uncertain/high-stakes | graphify, expert subagents |
+| **plan gate** | `plan-readiness-review` ✅ | ticket ↔ plan alignment; panel argues to consensus. Verdict: READY / NEEDS-WORK / MISALIGNED | git, graphify, expert subagents |
 | implement | `test-driven-implementation` | build the plan task-by-task with TDD (planned) | Serena (find), Claude Code (edit) |
 | **code gate** | `expert-panel-review` ✅ | multi-expert diff/PR review; findings verified by 3 skeptics | git, gh, graphify, expert subagents |
 
@@ -46,11 +45,10 @@ Planned stages add two more:
 
 ## Status
 
-Early. The two review gates and the plan stage are built and tested. The remaining generative stages (spec, implement) are planned — see [docs/flow.md](docs/flow.md) for the full design and roadmap.
+Early. The two review gates and the plan stage are built and tested. The remaining generative stage (implement) is planned — see [docs/flow.md](docs/flow.md) for the full design and roadmap.
 
 | Stage | Skill | State |
 |---|---|---|
-| spec | `guided-spec-writing` | planned |
 | plan | `expert-advised-planning` | ✅ built + tested |
 | plan gate | `plan-readiness-review` | ✅ built + tested |
 | implement | `test-driven-implementation` | planned |
