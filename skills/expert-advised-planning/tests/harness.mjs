@@ -1,8 +1,12 @@
 // Dry-run loader: wraps the workflow body in an AsyncFunction with stubbed
 // workflow globals and a fake agent. No real agents are spawned.
 import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 
-export const SCRIPT = process.env.HOME + '/.claude/workflows/expert-advised-planning.js'
+// The engine ships inside the plugin at workflows/<skill>.js. Resolve it relative to
+// this test file (skills/<skill>/tests/) so tests run from the repo, no install needed.
+export const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), '../../../workflows/expert-advised-planning.js')
 
 export async function runWorkflow(scriptPath, { args = {}, agentImpl }) {
   if (typeof agentImpl !== 'function') throw new TypeError('agentImpl is required')

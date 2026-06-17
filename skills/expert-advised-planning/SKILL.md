@@ -45,7 +45,7 @@ List available add-on experts; collect any picks as `extraExperts`. Skip if none
 
 Invoke the **Workflow** tool:
 
-- `scriptPath`: `<home>/.claude/workflows/expert-advised-planning.js` (expand `<home>` with `echo "$HOME"`)
+- `scriptPath`: `${CLAUDE_PLUGIN_ROOT}/workflows/expert-advised-planning.js`
 - `args`:
   ```json
   {

@@ -3,3 +3,7 @@ node_modules/
 *.log
 graphify-out/
 docs/reviews/
+
+# Personal, machine-specific Claude Code config (permission allowlists, etc.).
+# The shared project config lives in .claude/settings.json, which IS tracked.
+.claude/settings.local.json

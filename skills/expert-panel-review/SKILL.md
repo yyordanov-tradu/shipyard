@@ -188,8 +188,7 @@ Read `/tmp/epr-diff.txt`, `/tmp/epr-files.txt`, `/tmp/epr-rules.txt`,
 `/tmp/epr-designdocs.txt`, `/tmp/epr-ci.txt` (PR mode; empty otherwise), and get the
 date with `date -u +%F`. Then invoke the **Workflow** tool:
 
-- `scriptPath`: `<home>/.claude/workflows/expert-panel-review.js` (expand `<home>`
-  with `echo "$HOME"`)
+- `scriptPath`: `${CLAUDE_PLUGIN_ROOT}/workflows/expert-panel-review.js`
 - `args`: a JSON object:
   ```json
   {
