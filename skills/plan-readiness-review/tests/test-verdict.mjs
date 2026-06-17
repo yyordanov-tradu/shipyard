@@ -1,5 +1,7 @@
 import assert from 'node:assert'
 import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 import { runWorkflow, SCRIPT } from './harness.mjs'
 
 // Build a fake where the alignment expert raises a Blocker and everyone concedes.
@@ -38,9 +40,10 @@ function makeFake({ severity, status }) {
 }
 
 {
-  const dir = process.env.HOME + '/.claude/skills/plan-readiness-review/tests/fixtures/'
-  const spec = await readFile(dir + 'spec.md', 'utf8')
-  const plan = await readFile(dir + 'plan.md', 'utf8')
+  // Fixtures sit next to this test file; resolve relative to it so tests run from the repo.
+  const dir = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
+  const spec = await readFile(join(dir, 'spec.md'), 'utf8')
+  const plan = await readFile(join(dir, 'plan.md'), 'utf8')
   const fake = async (prompt, opts) => {
     if (opts.label === 'review:alignment')
       return {
