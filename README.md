@@ -73,7 +73,7 @@ Two more tools, optional or per-project:
 
 | Tool | Needed for | State |
 |---|---|---|
-| **agent-lsp** (MCP) | symbol-level code intelligence (find symbols & references, types, diagnostics) in the `implement` stage — edits always stay with Claude Code. See [docs/tooling.md](docs/tooling.md) | **optional** — the `implement` stage is built and runs today; without agent-lsp it falls back to ripgrep |
+| **agent-lsp** (MCP) | symbol-level code intelligence (find symbols & references, types, diagnostics) in the `implement` stage — edits always stay with Claude Code. Install/config: [docs/agent-lsp.md](docs/agent-lsp.md); rules: [docs/tooling.md](docs/tooling.md) | **optional** — the `implement` stage is built and runs today; without agent-lsp it falls back to ripgrep |
 | **superpowers** | *not a runtime dependency.* It was useful inspiration while authoring the stages, but each shipyard stage carries its own logic and runs with superpowers absent (e.g. `expert-advised-planning` ships its own plan-format guide) | not required |
 
 **Per-project wiring:** graphify (and later agent-lsp) are configured in each *target* repo's `.mcp.json`, not in shipyard. shipyard stays generic; each project brings its own MCP tools, rules, and conventions. The authoritative tool-ownership rules live in [docs/tooling.md](docs/tooling.md).

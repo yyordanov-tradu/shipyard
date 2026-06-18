@@ -131,3 +131,8 @@ build/test config), never bundled in shipyard. So a tool may be missing. The rul
 graphify, agent-lsp, and context7 are configured in each *target* repo's `.mcp.json`, and the
 verify commands come from that repo's own config. shipyard ships none of them. This keeps the
 plugin generic and lets each project bring the language servers and rules it needs.
+
+Install/config per tool: **graphify** → [graphify.md](graphify.md); **agent-lsp** →
+[agent-lsp.md](agent-lsp.md) (<https://github.com/blackwell-systems/agent-lsp> — it orchestrates
+one language server per language; shipyard uses its retrieval tools only, Claude Code stays the
+single editor).
