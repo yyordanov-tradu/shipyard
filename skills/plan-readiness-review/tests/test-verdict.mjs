@@ -66,4 +66,29 @@ function makeFake({ severity, status }) {
   assert.ok(result.panel.includes('python-pro'), 'py fixture -> python-pro on the panel')
 }
 
+// A CONTESTED Blocker (one expert disputes it, another defends — a genuine split)
+// must NOT pass as READY. The verdict only looked at `agreed` gaps, so a contested
+// Blocker slipped through with a clean coverage matrix.
+{
+  const fake = async (prompt, opts) => {
+    if (opts.label === 'review:alignment')
+      return {
+        gaps: [{ dimension: 'alignment', severity: 'Blocker', title: 'risky migration',
+                 detail: 'd', evidence: 'e', fix: 'f' }],
+        matrix: { requirements: [{ id: 'R1', text: 'x', coveredBy: ['Task 1'], status: 'covered' }], orphanPlanSteps: [] },
+      }
+    if (opts.label?.startsWith('review:')) return { gaps: [], matrix: null }
+    if (opts.label === 'debate:architecture') return { reactions: [{ gapId: 'G1', stance: 'dispute', reason: 'not real' }] }
+    if (opts.label === 'debate:test-strategy') return { reactions: [{ gapId: 'G1', stance: 'defend', reason: 'it is real' }] }
+    if (opts.label?.startsWith('debate:')) return { reactions: [] }
+    if (opts.label === 'decide') return null
+    return null
+  }
+  const { result } = await runWorkflow(SCRIPT, {
+    args: { spec: 'x', plan: 'y', projectLangs: [], date: '' }, agentImpl: fake,
+  })
+  assert.notEqual(result.verdict, 'READY', 'a contested Blocker must not yield READY')
+  assert.equal(result.verdict, 'NEEDS-WORK', 'contested Blocker -> NEEDS-WORK')
+}
+
 console.log('verdict tests: PASS')

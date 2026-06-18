@@ -19,7 +19,9 @@ const baseArgs = { spec: 'x', plan: 'y', rosterOverride: ROSTER, projectLangs: [
   const { result } = await runWorkflow(SCRIPT, { args: baseArgs, agentImpl: fake })
   const c1 = result.consensus.find((c) => c.title === 'C1')
   assert.equal(c1.status, 'contested', 'disputed Blocker (tie) must be contested, not agreed')
-  assert.equal(result.verdict, 'READY', 'a contested Blocker must not force MISALIGNED')
+  // A contested Blocker is not "agreed" (so not MISALIGNED) but it is an unresolved
+  // disagreement about a blocking problem — the spec keeps it out of READY. -> NEEDS-WORK.
+  assert.equal(result.verdict, 'NEEDS-WORK', 'a contested Blocker blocks READY (but is not MISALIGNED)')
   assert.ok(/## Contested/.test(result.report) && /C1/.test(result.report), 'contested section shows C1')
 }
 
