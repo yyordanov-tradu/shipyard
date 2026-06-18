@@ -16,7 +16,7 @@ Work enters as a Jira ticket. Each stage is a skill; the two **gates** are the s
 |---|---|---|---|
 | plan | `expert-advised-planning` ✅ | turn a Jira ticket (or pasted spec) into a plan; lead drafts after an expert panel advises, conflicts arbitrated, escalated to a human when uncertain/high-stakes | graphify, expert subagents |
 | **plan gate** | `plan-readiness-review` ✅ | ticket ↔ plan alignment; panel argues to consensus. Verdict: READY / NEEDS-WORK / MISALIGNED | git, graphify, expert subagents |
-| implement | `test-driven-implementation` | build the plan task-by-task with TDD (planned) | Serena (find), Claude Code (edit) |
+| implement | `test-driven-implementation` | build the plan task-by-task with TDD (planned) | agent-lsp (find/diagnostics), Claude Code (edit) |
 | **code gate** | `expert-panel-review` ✅ | multi-expert diff/PR review; findings verified by 3 skeptics | git, gh, graphify, expert subagents |
 
 Both gates run as local dynamic workflows, ground themselves in the codebase via **graphify**, and save reports under the project's `docs/reviews/`.
@@ -38,10 +38,10 @@ Planned stages add two more:
 
 | Tool | Needed for | State |
 |---|---|---|
-| **Serena** (MCP) | symbol-level semantic **search/navigation** (find symbols & references) in the `implement` stage — edits stay with Claude Code | planned |
+| **agent-lsp** (MCP) | symbol-level code intelligence (find symbols & references, types, diagnostics) in the `implement` stage — edits stay with Claude Code. See [docs/tooling.md](docs/tooling.md) | planned |
 | **superpowers** | *not a runtime dependency.* It was useful inspiration while authoring the stages, but each shipyard stage carries its own logic and runs with superpowers absent. `expert-advised-planning` already does (it ships its own plan-format guide) | not required |
 
-**Per-project wiring:** graphify (and later Serena) are configured in each *target* repo's `.mcp.json`, not in shipyard. shipyard stays generic; each project brings its own MCP tools, rules, and conventions.
+**Per-project wiring:** graphify (and later agent-lsp) are configured in each *target* repo's `.mcp.json`, not in shipyard. shipyard stays generic; each project brings its own MCP tools, rules, and conventions. The authoritative tool-ownership rules live in [docs/tooling.md](docs/tooling.md).
 
 ## Status
 
@@ -73,7 +73,7 @@ remote + marketplace entry is still a follow-up — see docs/flow.md.)
 - **Own the interfaces, borrow the engines.** The generative stages reuse proven approaches (superpowers) but emit *shipyard's* artifact formats, so the gates never drift.
 - **Self-contained.** Engine logic is vendored, not depended on, so one install gives the team the whole pipeline.
 - **Gates are enforced, not optional.** A gate you can skip is not a gate (CI/hook enforcement is on the roadmap).
-- **Per-project config lives in the repo.** Rules, conventions, and `.mcp.json` (graphify, later Serena) ship with each project.
+- **Per-project config lives in the repo.** Rules, conventions, and `.mcp.json` (graphify, later agent-lsp) ship with each project.
 
 ## Layout
 
@@ -86,4 +86,5 @@ shipyard/
     expert-panel-review/         code gate (SKILL.md + DESIGN.md + PLAN.md + tests/)
   workflows/                     the deterministic engines (one .js per skill), read via ${CLAUDE_PLUGIN_ROOT}
   docs/flow.md                   pipeline design + roadmap
+  docs/tooling.md                tool-ownership bible (graphify / agent-lsp / Claude Code)
 ```

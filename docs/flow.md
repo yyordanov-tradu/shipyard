@@ -60,59 +60,28 @@ silently break the gates. So:
 (Open item: confirm whether Claude Code plugins can declare and auto-install another plugin
 as a dependency. If they cannot, vendoring is the only clean option.)
 
-## Three tools, three jobs — no overlap
+## Tooling — see the bible
 
-The rule: **one tool per job.** If two tools can do the same thing (e.g. two editors), the
-model wastes turns deciding between them and makes mistakes. So each job has exactly one
-owner.
+The full, authoritative tooling strategy lives in **[docs/tooling.md](tooling.md)** — the rules
+there govern every skill, and any conflict resolves in its favor. The short version:
 
-| Job | Owner | Phase |
+Understanding code happens at two zoom levels, each with exactly one owner, so an agent never
+calls two tools for the same question:
+
+| Zoom level | Owner | Used in |
 |---|---|---|
-| Understand the architecture (the map) | **graphify** | plan creation + review gates |
-| Find code precisely (symbols, references) | **Serena** — search/navigation only | building |
-| Change code (every edit) | **Claude Code** native tools (Edit / Write) | building |
+| **Macro** — architecture, hubs, clusters, dependency paths, module-level blast radius | **graphify** | plan creation + both gates |
+| **Micro** — exact definitions, all callers, types, diagnostics, symbol-level blast radius | **agent-lsp** (LSP-backed) | `implement` (optional, for caller checks, in the code gate) |
+| Change code (every edit) | **Claude Code** native `Edit`/`Write` | `implement` |
+| Raw text / unindexed files (fallback) | **ripgrep** | everywhere |
 
-In `implement`: Serena to locate the exact method / class / reference → Claude Code to
-make the change → run tests. (graphify is a review-side tool; it is not used here.)
-
-### graphify — the helicopter view (planning side)
-
-**What it is:** an open-source knowledge-graph skill for AI coding assistants. It parses a
-codebase (and docs/diagrams) into a queryable graph using Tree-sitter, NetworkX, and Leiden
-community detection. Runs locally — code is not sent anywhere.
-
-**Strong where:** the high-level view. It surfaces "god nodes" (the most-connected hubs),
-community clusters, surprising cross-module connections, and dependency paths — and answers
-architecture questions at a small fraction of the tokens of reading raw files. That is
-exactly what the `plan-readiness-review` gate needs to judge whether a plan fits the real
-structure; the code gate also uses it to ground the expert reviewers. The `plan` *creation*
-stage (`expert-advised-planning`) now uses it too — advisers and the arbiter ground their
-reasoning in the real codebase, falling back to smart-explore/grep when graphify is absent.
-Read-only throughout.
-
-Source: <https://graphify.net/> · MCP tools `query_graph`, `get_node`, `get_neighbors`,
-`shortest_path`.
-
-### Serena — precise search & navigation (building side)
-
-**What it is:** an open-source MCP coding-agent toolkit built on the Language Server
-Protocol (LSP). It understands code at the **symbol level** (methods, classes, references)
-across 40+ languages, instead of line numbers or text search.
-
-**Strong where, and how shipyard uses it:** precise semantic search — find the exact symbol
-and all the places that reference it, reliably, even in large codebases. shipyard uses
-Serena **only to find and navigate**. All edits are made with Claude Code's native tools.
-Serena can also edit, but we deliberately do not use that: two editors would force the model
-to choose, which wastes turns and invites errors. Configure Serena (or the `implement`
-skill's tool allowlist) so only its retrieval tools are in play.
-
-Source: <https://github.com/oraios/serena>
-
-**Short version: graphify maps, Serena locates, Claude Code edits.**
-
-Other tools: **git** everywhere; **gh** for the code gate's PR mode; **domain-expert
-agents** staff both panels. Each target repo wires the MCP tools it needs in its own
-`.mcp.json` — shipyard stays generic.
+**Short version: graphify maps, agent-lsp gives eyes, Claude Code edits.** graphify and
+agent-lsp both surface "blast radius," but at different zoom levels — macro vs symbol — and a
+skill answers a given question with only one of them (see the bible's *Overlap resolution*).
+Also in play: **context7** for grounding unfamiliar library APIs, **git** everywhere, **gh** for
+the code gate's PR mode, and **domain-expert agents** staffing both panels. Tools are wired
+per-project in the target repo's `.mcp.json`; shipyard stays generic and degrades to ripgrep
+when a richer tool is absent.
 
 ## Roadmap
 
@@ -123,7 +92,7 @@ agents** staff both panels. Each target repo wires the MCP tools it needs in its
    the human. It pins the plan format both gates and the implement stage depend on, carries its
    own plan-format guide (self-contained), and grounds advisers + arbiter in graphify. ← here.
 4. **`implement` skill** (`test-driven-implementation`) — TDD execution; load project rules; use
-   **Serena** to locate symbols/references and **Claude Code** to edit; run tests each task;
+   **agent-lsp** to locate symbols/references and **Claude Code** to edit; run tests each task;
    hand off to the code gate.
 5. **Enforcement** — make the gates non-skippable: a hook or CI check that the plan gate
    returned READY before implementation, and the code gate runs in the PR pipeline.
