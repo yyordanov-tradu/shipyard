@@ -43,7 +43,7 @@ review on this.
 
 Invoke the **Workflow** tool:
 
-- `scriptPath`: `<home>/.claude/workflows/plan-readiness-review.js` (expand `<home>` with `echo "$HOME"`)
+- `scriptPath`: `${CLAUDE_PLUGIN_ROOT}/workflows/plan-readiness-review.js`
 - `args`: a JSON object:
   ```json
   {

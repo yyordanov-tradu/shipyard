@@ -1,5 +1,7 @@
 import assert from 'node:assert'
 import { readFile } from 'node:fs/promises'
+import { fileURLToPath } from 'node:url'
+import { dirname, join } from 'node:path'
 import { runWorkflow, SCRIPT } from './harness.mjs'
 
 // Build a fake where the alignment expert raises a Blocker and everyone concedes.
@@ -38,9 +40,10 @@ function makeFake({ severity, status }) {
 }
 
 {
-  const dir = process.env.HOME + '/.claude/skills/plan-readiness-review/tests/fixtures/'
-  const spec = await readFile(dir + 'spec.md', 'utf8')
-  const plan = await readFile(dir + 'plan.md', 'utf8')
+  // Fixtures sit next to this test file; resolve relative to it so tests run from the repo.
+  const dir = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
+  const spec = await readFile(join(dir, 'spec.md'), 'utf8')
+  const plan = await readFile(join(dir, 'plan.md'), 'utf8')
   const fake = async (prompt, opts) => {
     if (opts.label === 'review:alignment')
       return {
@@ -61,6 +64,31 @@ function makeFake({ severity, status }) {
   assert.equal(result.verdict, 'MISALIGNED', 'uncovered requirement must block')
   assert.ok(/R2/.test(result.report) && /uncovered/i.test(result.report), 'R2 shown uncovered')
   assert.ok(result.panel.includes('python-pro'), 'py fixture -> python-pro on the panel')
+}
+
+// A CONTESTED Blocker (one expert disputes it, another defends — a genuine split)
+// must NOT pass as READY. The verdict only looked at `agreed` gaps, so a contested
+// Blocker slipped through with a clean coverage matrix.
+{
+  const fake = async (prompt, opts) => {
+    if (opts.label === 'review:alignment')
+      return {
+        gaps: [{ dimension: 'alignment', severity: 'Blocker', title: 'risky migration',
+                 detail: 'd', evidence: 'e', fix: 'f' }],
+        matrix: { requirements: [{ id: 'R1', text: 'x', coveredBy: ['Task 1'], status: 'covered' }], orphanPlanSteps: [] },
+      }
+    if (opts.label?.startsWith('review:')) return { gaps: [], matrix: null }
+    if (opts.label === 'debate:architecture') return { reactions: [{ gapId: 'G1', stance: 'dispute', reason: 'not real' }] }
+    if (opts.label === 'debate:test-strategy') return { reactions: [{ gapId: 'G1', stance: 'defend', reason: 'it is real' }] }
+    if (opts.label?.startsWith('debate:')) return { reactions: [] }
+    if (opts.label === 'decide') return null
+    return null
+  }
+  const { result } = await runWorkflow(SCRIPT, {
+    args: { spec: 'x', plan: 'y', projectLangs: [], date: '' }, agentImpl: fake,
+  })
+  assert.notEqual(result.verdict, 'READY', 'a contested Blocker must not yield READY')
+  assert.equal(result.verdict, 'NEEDS-WORK', 'contested Blocker -> NEEDS-WORK')
 }
 
 console.log('verdict tests: PASS')
