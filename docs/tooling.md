@@ -66,20 +66,27 @@ second opinion.
 
 ## Ownership by skill
 
-Each skill has one **primary** understanding tool, set by the zoom level its job needs.
+Each skill has a **primary** understanding tool, set by the zoom level its job needs.
+(`implement` is the one skill that legitimately uses *both* — split by agent role; see its row.)
 
 | Skill (phase) | Primary understanding | Secondary (use-if-present) | Edits | Fallback |
 |---|---|---|---|---|
 | **expert-advised-planning** (plan) | **graphify** (macro) | — | — | ripgrep |
 | **plan-readiness-review** (plan gate) | **graphify** (macro) | — | — | ripgrep |
-| **implement** (`test-driven-implementation`) | **agent-lsp** (micro) + graphify map *carried* from the plan for macro context | context7 (unfamiliar APIs) | **Claude Code** | ripgrep |
+| **implement** (`test-driven-implementation`) | **lead:** graphify (macro) for stream analysis · **subagents:** agent-lsp (micro) for the per-task loop | context7 (subagents, unfamiliar APIs) | **Claude Code** (subagents) | ripgrep |
 | **expert-panel-review** (code gate) | **graphify** (macro, grounds the experts) | **agent-lsp** for exact "are all callers of this changed symbol updated?" checks | — | ripgrep |
 
 Notes:
-- **graphify is primary in 3 of 4 skills** (plan + both gates) because planning and judging are
-  architectural questions.
-- **agent-lsp is primary only in implement**, where a safe edit needs exact references, types,
-  diagnostics, and symbol-level blast radius.
+- **graphify is the macro owner** wherever architecture is the question: the plan stage, both
+  gates, and the **implement lead's stream analysis** (which task groups are independent, where
+  work happens).
+- **agent-lsp is the micro owner**, used most heavily in **implement's per-task subagents**,
+  where a safe edit needs exact references, types, diagnostics, and symbol-level blast radius.
+- **implement splits the two by agent role**, so they never collide: the *lead* asks graphify
+  the macro question (streams) once up front; the *per-task subagents* ask agent-lsp the micro
+  questions. A subagent is given agent-lsp but **not** graphify — it receives the lead's macro
+  orientation pre-digested as text — which enforces "one owner per question" by access, not just
+  discipline.
 - In the **code gate**, agent-lsp is **secondary and optional**, and it is only ever called for a
   *different* question than graphify (exact caller checks during verification), never the same
   architecture question. graphify stays primary there.
@@ -92,10 +99,11 @@ graphify and agent-lsp both surface "blast radius," and that is the one place am
 creep in. It is resolved by zoom level **and** by phase:
 
 - **Macro blast radius** ("touching the auth hub ripples into these clusters") → **graphify**,
-  used while *reasoning about* the plan or architecture (plan, both gates).
+  used while *reasoning about* structure (plan, both gates, and the implement lead's stream
+  analysis).
 - **Micro blast radius** ("changing this signature breaks these 7 callers — run these tests")
-  → **agent-lsp**, used while *making or verifying* an actual edit (implement; optionally the
-  code gate).
+  → **agent-lsp**, used while *making or verifying* an actual edit (implement's per-task
+  subagents; optionally the code gate).
 
 A skill answers a given blast-radius question with **one** of them, chosen by whether it is
 reasoning about structure (macro) or touching code (micro). They are never run against the

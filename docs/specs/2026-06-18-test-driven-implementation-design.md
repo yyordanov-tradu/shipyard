@@ -58,18 +58,20 @@ the light between-task review, integration, escalation, and the final handoff me
 ## Tooling
 
 implement follows **[docs/tooling.md](../tooling.md)** — the authoritative tool-ownership
-bible. In this stage:
+bible. implement is the one skill that uses *both* understanding tools, **split by agent role**
+so they never collide:
 
-- **agent-lsp** is the **primary** understanding tool (micro zoom): exact definitions, all
-  callers, types, diagnostics, and symbol-level impact — including which tests a change
-  affects.
-- **graphify** map is **carried from the plan** for macro orientation (where a change sits),
-  not re-run here and not used for symbol lookups.
-- **context7** grounds unfamiliar / low-use third-party APIs before they're called.
-- **Claude Code** native `Edit`/`Write` makes every edit (the single editor).
-- **ripgrep** is the fallback when no language server exists.
+- **Lead → graphify (macro):** stream analysis — which task groups are independent and where
+  work happens (Step 1). This is an architecture question, so graphify owns it.
+- **Subagents → agent-lsp (micro):** the per-task loop — exact definitions, all callers, types,
+  diagnostics, and which tests a change affects.
+- **context7** (subagents) grounds unfamiliar / low-use third-party APIs before they're called.
+- **Claude Code** native `Edit`/`Write` (subagents) makes every edit (the single editor).
+- **ripgrep** is the fallback when no language server / graph exists.
 - The bible's rule holds: one owner per question, never two understanding tools for the same
-  question. Absent tools degrade to ripgrep and are announced, never silently skipped.
+  question. A subagent is given agent-lsp but **not** graphify — it receives the lead's macro
+  orientation pre-digested as text — so "one owner per question" is enforced by *access*, not
+  just discipline. Absent tools degrade to ripgrep and are announced, never silently skipped.
 
 ## Execution flow
 
@@ -79,11 +81,11 @@ The lead parses the plan into tasks (heading, **Files** list, any explicit "depe
 N" notes) and partitions them into **streams**:
 
 - Build a dependency/conflict relation: two tasks belong to the same stream if their Files
-  sets intersect, OR the carried graphify map shows a dependency path between the areas they
-  touch, OR an explicit cross-reference links them, OR one consumes an artifact the other
-  creates. (Partitioning is a macro/architecture question, so graphify owns the dependency
-  signal here — per the bible; agent-lsp's micro view is used inside the per-task loop, not
-  for stream analysis.)
+  sets intersect, OR **graphify** (queried by the lead, refreshed if stale) shows a dependency
+  path between the areas they touch, OR an explicit cross-reference links them, OR one consumes
+  an artifact the other creates. (Partitioning is a macro/architecture question, so graphify
+  owns the dependency signal here — per the bible; agent-lsp's micro view is used inside the
+  per-task loop, not for stream analysis.)
 - A **stream** is a connected component of that relation — internally ordered, independent of
   other streams.
 - **High-conviction gate:** two streams may run in parallel only when they are *clearly*
@@ -108,6 +110,37 @@ Each task is built by a fresh subagent, for focused context. The loop:
    using agent-lsp call-hierarchy to find impacted tests; fall back to the full suite. Run
    whatever of typecheck/lint/tests the project actually has, in that order.
 5. **Fix until green**, then return to the lead: branch/worktree ref + status.
+
+### Step 2b — Subagent contract (what each subagent gets)
+
+Each task-subagent gets a **scoped slice**, not the whole plan — this is the reason
+fresh-subagent-per-task exists (focused context, no drift):
+
+- **Its own task block** in full (goal, Files, steps, embedded tests).
+- **The plan's shared header** (goal, architecture, shared object shapes, conventions /
+  tech-stack), which tasks reference.
+- **A text slice of the lead's macro orientation** (where this change sits) — *not* the
+  graphify tool.
+- It does **not** get other tasks' descriptions. It sees what earlier tasks produced through
+  the **repo itself** (committed code in its branch/worktree), never their task text.
+
+Tool allowlist — deliberately scoped so it enforces the bible by *access*:
+
+| Subagent has | Subagent does NOT have | Why |
+|---|---|---|
+| **agent-lsp** retrieval (symbols, refs, types, diagnostics, call-hierarchy) | agent-lsp's edit tools | Claude Code is the one editor |
+| **Claude Code** `Edit`/`Write` | — | the single editor |
+| **Bash** (typecheck / lint / tests; git in its worktree) | — | runs the verify gate |
+| **ripgrep**, **context7** | **graphify** (the tool) | macro is the lead's job; the subagent gets the map slice as text |
+
+Because the subagent only has agent-lsp for code intelligence (never graphify), it *cannot*
+call two understanding tools for the same question.
+
+Division of labor:
+- **Lead:** graphify (stream analysis), git (branch / worktree / integrate), reads the plan,
+  dispatches subagents, runs the full suite at integration. Does not edit code.
+- **Subagent:** the scoped slice + the micro toolset above; works in its worktree (or the
+  feature branch for sequential); returns "done + branch" or "failed + reason."
 
 ### Step 3 — Parallel mechanics
 
@@ -190,7 +223,8 @@ tested the same way — coverage focuses on the deterministic helpers the launch
 - **git** — required (branch, commit, worktree, integrate).
 - **agent-lsp** (MCP) — recommended; primary code-intelligence in this stage. Falls back to
   ripgrep when absent.
-- **graphify** — recommended; carried macro map. Falls back to grep/smart-explore.
+- **graphify** — recommended; the lead's macro tool for stream analysis. Falls back to
+  grep/smart-explore.
 - **context7** (MCP) — recommended; API grounding.
 - **project verify commands** — required for the gate to be meaningful; degrades to whatever
   exists (at minimum, tests), reporting what it skipped.

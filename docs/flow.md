@@ -70,9 +70,9 @@ calls two tools for the same question:
 
 | Zoom level | Owner | Used in |
 |---|---|---|
-| **Macro** — architecture, hubs, clusters, dependency paths, module-level blast radius | **graphify** | plan creation + both gates |
-| **Micro** — exact definitions, all callers, types, diagnostics, symbol-level blast radius | **agent-lsp** (LSP-backed) | `implement` (optional, for caller checks, in the code gate) |
-| Change code (every edit) | **Claude Code** native `Edit`/`Write` | `implement` |
+| **Macro** — architecture, hubs, clusters, dependency paths, module-level blast radius | **graphify** | plan creation + both gates + the `implement` lead's stream analysis |
+| **Micro** — exact definitions, all callers, types, diagnostics, symbol-level blast radius | **agent-lsp** (LSP-backed) | `implement` per-task subagents (optional, for caller checks, in the code gate) |
+| Change code (every edit) | **Claude Code** native `Edit`/`Write` | `implement` subagents |
 | Raw text / unindexed files (fallback) | **ripgrep** | everywhere |
 
 **Short version: graphify maps, agent-lsp gives eyes, Claude Code edits.** graphify and
