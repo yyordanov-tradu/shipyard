@@ -31,8 +31,10 @@ Each stage is a folder `skills/<name>/` containing:
   skills) **or** a plain `lib/*.mjs` of deterministic helpers (the implement skill). Pick the
   fit, not the symmetry — they need not match.
 - `tests/` — `.mjs` unit tests for the deterministic logic.
-- `DESIGN.md` and `PLAN.md` — in-folder copies of the spec/plan from `docs/specs/` and
-  `docs/plans/`.
+
+The skill's design spec and implementation plan are **not** kept in the skill folder. They live
+once, canonically, in `docs/specs/<date>-<name>-design.md` and `docs/plans/<date>-<name>.md` —
+one source of truth, no copies to drift.
 
 Skills read their engine via `${CLAUDE_PLUGIN_ROOT}/workflows/<name>.js` (or `…/lib/…`) — read
 straight from the install location, no copy step, nothing written to `~/.claude/`.

@@ -81,11 +81,13 @@ remote + marketplace entry is still a follow-up — see docs/flow.md.)
 shipyard/
   .claude-plugin/plugin.json     plugin manifest
   skills/
-    expert-advised-planning/     plan stage (SKILL.md + DESIGN.md + PLAN.md + tests/)
-    plan-readiness-review/       plan gate (SKILL.md + DESIGN.md + PLAN.md + tests/)
-    test-driven-implementation/  implement stage (SKILL.md + lib/ + DESIGN.md + PLAN.md + tests/)
-    expert-panel-review/         code gate (SKILL.md + DESIGN.md + PLAN.md + tests/)
+    expert-advised-planning/     plan stage (SKILL.md + tests/)
+    plan-readiness-review/       plan gate (SKILL.md + tests/)
+    test-driven-implementation/  implement stage (SKILL.md + lib/ + tests/)
+    expert-panel-review/         code gate (SKILL.md + tests/)
   workflows/                     the deterministic engines (one .js per skill), read via ${CLAUDE_PLUGIN_ROOT}
+  docs/specs/                    one design spec per skill (<date>-<skill>-design.md) — canonical
+  docs/plans/                    one implementation plan per skill (<date>-<skill>.md) — canonical
   docs/flow.md                   pipeline design + roadmap
   docs/tooling.md                tool-ownership bible (graphify / agent-lsp / Claude Code)
 ```
