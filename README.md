@@ -83,6 +83,7 @@ shipyard/
   skills/
     expert-advised-planning/     plan stage (SKILL.md + DESIGN.md + PLAN.md + tests/)
     plan-readiness-review/       plan gate (SKILL.md + DESIGN.md + PLAN.md + tests/)
+    test-driven-implementation/  implement stage (SKILL.md + lib/ + DESIGN.md + PLAN.md + tests/)
     expert-panel-review/         code gate (SKILL.md + DESIGN.md + PLAN.md + tests/)
   workflows/                     the deterministic engines (one .js per skill), read via ${CLAUDE_PLUGIN_ROOT}
   docs/flow.md                   pipeline design + roadmap
