@@ -1,8 +1,18 @@
 # Scalable diff review for `expert-panel-review` — Design Note
 
 - **Date:** 2026-06-18
-- **Status:** proposed
+- **Status:** implemented (2026-06-18)
 - **Kind:** engine improvement to the `expert-panel-review` code gate
+
+> **Implemented.** The engine now supports two modes. **Repo mode** (`repoPath` + `baseRef`,
+> no inline `diff`) is preferred for large/initial PRs: each agent reads only its files via
+> `git -C <repoPath> diff <baseRef> -- <file>`, so the launcher never inlines a huge diff and
+> no single prompt holds the whole change. **Inline mode** (pass `diff`) is the fallback for
+> small diffs or untracked-file working trees; the engine still slices the diff per file so each
+> expert/skeptic sees only its lane's hunks. Helper `splitDiffByFile` does the slicing;
+> `changeView(files)` builds the per-lane view. Covered by
+> `skills/expert-panel-review/tests/test-slicing.mjs`. The rest of this note is the original
+> design rationale.
 
 ## The problem in one line
 

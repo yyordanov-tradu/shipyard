@@ -81,11 +81,19 @@ contains the code being reviewed, so no worktree is needed. Leave `/tmp/epr-ci.t
 empty in these modes: a local, unpushed diff has no CI run to read, and the workflow
 treats empty `ciStatus` as "no CI line."
 
+**Also record the base for repo mode.** Set `baseRef` to the merge-base SHA you diffed
+against, so the engine can re-derive each file's change from the repo without the whole
+diff being inlined:
+- default / paths mode: `baseRef="$mb"` (the merge-base from above).
+- PR mode: `baseRef="$(git -C "$proj" merge-base "$base" FETCH_HEAD)"` (reachable from the
+  PR worktree, which shares the same `.git`).
+
 `repoPath` is the path experts use to open real files and run `mvn test-compile`;
-that is what stops them from guessing about code they cannot see. Honest limitation:
-in PR mode this gives the PR author's files as-is (the PR head), not a merge with the
-base. A cross-PR merge-race compile break — one that only shows up when the branch
-meets newly-landed main under CI — is still out of scope for this local panel.
+that is what stops them from guessing about code they cannot see. With `baseRef` set it is
+ALSO where each agent reads its slice of the change (`git -C <repoPath> diff <baseRef> -- <file>`).
+Honest limitation: in PR mode this gives the PR author's files as-is (the PR head), not a
+merge with the base. A cross-PR merge-race compile break — one that only shows up when the
+branch meets newly-landed main under CI — is still out of scope for this local panel.
 
 If `/tmp/epr-diff.txt` is empty or whitespace: tell the user "Nothing to review —
 the diff against `<base>` is empty." and STOP. Do not run the workflow.
@@ -127,11 +135,13 @@ you need the diff itself cleaned, regenerate it with `git diff` against the PR r
 using the `EXCLUDES` above. The simplest path: drop the excluded files from
 `/tmp/epr-files.txt` and leave the diff whole.
 
-**If still larger than ~150 KB after excludes** (`wc -c < /tmp/epr-diff.txt`): do NOT
-hand-trim. Either split the review into multiple paths-mode runs over subsets of the
-changed files, or tell the user the size and ask which paths to focus on. Per-expert
-chunking of one huge diff is a future workflow capability — not available yet — so for
-now narrowing is via paths mode only, never by editing the diff text.
+**If larger than ~150 KB after excludes** (`wc -c < /tmp/epr-diff.txt`): use **repo mode**
+instead of inlining the diff (see Step 4). In repo mode you pass `baseRef` + `repoPath` and
+**omit the `diff`** — the engine slices the change per file and each agent reads only its
+files from the repo via `git diff`, so no huge blob is ever passed. Repo mode needs the
+changes to be committed (or in the PR worktree); for a working tree with **untracked** files
+not yet committed, either commit them first or fall back to inline mode on a narrower paths
+set. Never hand-trim the diff text.
 
 ## Step 3 — Source the project rules (for the compliance lane)
 
@@ -192,8 +202,9 @@ date with `date -u +%F`. Then invoke the **Workflow** tool:
 - `args`: a JSON object:
   ```json
   {
-    "diff": "<contents of /tmp/epr-diff.txt>",
+    "diff": "<contents of /tmp/epr-diff.txt — OR omit/empty in repo mode>",
     "changedFiles": ["<one entry per line of /tmp/epr-files.txt, deduplicated>"],
+    "baseRef": "<the merge-base SHA from Step 2 — required for repo mode>",
     "rosterOverride": null,
     "repoPath": "<the repoPath value: PR-mode worktree dir, else $proj>",
     "rules": "<contents of /tmp/epr-rules.txt>",
@@ -202,9 +213,20 @@ date with `date -u +%F`. Then invoke the **Workflow** tool:
     "date": "<YYYY-MM-DD>"
   }
   ```
+  **Pick the mode by diff size:**
+  - **Repo mode (preferred for anything large, and the default when `repoPath` + `baseRef`
+    are both set):** pass `baseRef` + `repoPath` and **omit `diff`** (or pass `""`). The
+    engine slices the change per file; each agent reads only its files via
+    `git -C <repoPath> diff <baseRef> -- <file>`. Nothing huge is inlined, so a whole-plugin
+    or initial-import PR reviews in one run. Needs the changes committed / in the PR worktree.
+  - **Inline mode (small diffs, or untracked-file working trees):** pass the literal
+    `diff` bytes (see "Pass the diff verbatim" above). The engine still slices it per file so
+    each agent only sees its lane's hunks. Use this when there is no `baseRef`/`repoPath`, or
+    when untracked files must be reviewed.
+
   In roster-override mode set `rosterOverride` to the array of agent names instead
-  of null. `repoPath` is not read from a file — it is the value you set in Step 2
-  (the PR-mode worktree directory, or `$proj` in default/paths mode).
+  of null. `repoPath`/`baseRef` are not read from files — they are the values you set in
+  Step 2.
 
 The workflow returns `{ report, findings, ledger, failedExperts, panel, date, verdict }`.
 `ledger` is the verification ledger (load-bearing claims marked verified /

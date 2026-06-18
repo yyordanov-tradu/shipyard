@@ -102,10 +102,10 @@ when a richer tool is absent.
    `~/.claude/`. So the plugin is self-contained on install. Still pending: a shared git remote +
    `.claude-plugin/marketplace.json` so the team installs with `/plugin marketplace add <remote>`
    then `/plugin install shipyard`.
-7. **Scalable diff review** — the code gate inlines the whole diff into every expert + skeptic +
-   ledger prompt, so cost scales as `diff size × agents` and large or initial PRs exceed the
-   ~150 KB ceiling (today's only lever is manual paths-mode splitting). Fix: slice the diff per
-   file and pass each agent only its lane's hunks, reading the rest from `repoPath`. See
+7. **Done** — **Scalable diff review.** The code gate no longer inlines the whole diff into
+   every prompt. In **repo mode** (`repoPath` + `baseRef`) each agent reads only its files via
+   `git diff`; in **inline mode** the engine slices the diff per file. So large/initial PRs
+   review in one run instead of hitting the ~150 KB ceiling. See
    [docs/specs/2026-06-18-scalable-diff-review-design.md](specs/2026-06-18-scalable-diff-review-design.md).
 
 ## Build order rationale
