@@ -200,11 +200,20 @@ Per-project / per-invocation, no shipyard-bundled defaults beyond the constants 
 
 ```
 skills/test-driven-implementation/
-  SKILL.md      the launcher (this design, made operational)
+  SKILL.md      the launcher (orchestration prose)
+  lib/          deterministic helpers (.mjs): plan parsing, stream partition,
+                verdict lookup, verify-gate sequencing — each importable AND
+                runnable as a CLI (the launcher calls them via `node`)
+  tests/        .mjs unit tests for lib/
   DESIGN.md     in-folder copy of this spec
   PLAN.md       the implementation plan
-  tests/        .mjs unit tests for the deterministic logic
 ```
+
+The launcher keeps the model-driven work (querying graphify, dispatching subagents, editing,
+integrating). The deterministic decisions — parsing the plan, partitioning streams, reading the
+gate verdict, sequencing the verify gate — live in `lib/` as pure functions, so they are exact
+and unit-tested rather than left to model reasoning. "No `workflows/*.js` engine" refers to the
+Workflow-tool fan-out engine the other three skills use; these plain helpers are not that.
 
 ## Testing
 
