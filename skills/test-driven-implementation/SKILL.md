@@ -18,7 +18,7 @@ agent-lsp (micro); Claude Code edits; ripgrep is the fallback.
 
 1. `/test-driven-implementation [plan-path] [--force] [--max-parallel N]`. Plan = the given
    path, else the newest file in `docs/plans/`. If none, STOP.
-2. Slug = the plan filename without date prefix/extension. Read the verdict:
+2. Slug = the plan filename without date prefix/extension (used for verdict lookup via substring-matching the gate's report filename). Read the verdict:
    `node "$LIB/verdict.mjs" docs/reviews "<slug>"`.
    - `verdict == "READY"` → proceed.
    - otherwise → **STOP**: tell the user to run `plan-readiness-review` first — unless `--force`

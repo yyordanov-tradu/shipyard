@@ -38,7 +38,7 @@ export function planStreams(tasks, { depEdges = [], graphAvailable = false } = {
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const { tasks } = parsePlan(readFileSync(process.argv[2], 'utf8'))
-  const depEdges = process.argv[3] ? JSON.parse(process.argv[3]) : []
+  const depEdges = (process.argv[3] && !process.argv[3].startsWith('--')) ? JSON.parse(process.argv[3]) : []
   const graphAvailable = process.argv.includes('--graph')
   process.stdout.write(JSON.stringify(planStreams(tasks, { depEdges, graphAvailable }), null, 2) + '\n')
 }
