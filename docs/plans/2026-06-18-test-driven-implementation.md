@@ -308,7 +308,7 @@ import { join } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 export function parseVerdict(text) {
-  const m = String(text).match(/verdict\b[^A-Za-z]*\**\s*(READY|NEEDS-WORK|MISALIGNED)/i)
+  const m = String(text).match(/verdict\b.*?(READY|NEEDS-WORK|MISALIGNED)/i)
   return m ? m[1].toUpperCase() : null
 }
 
