@@ -16,7 +16,7 @@ Work enters as a Jira ticket. Each stage is a skill; the two **gates** are the s
 |---|---|---|---|
 | plan | `expert-advised-planning` ✅ | turn a Jira ticket (or pasted spec) into a plan; lead drafts after an expert panel advises, conflicts arbitrated, escalated to a human when uncertain/high-stakes | graphify, expert subagents |
 | **plan gate** | `plan-readiness-review` ✅ | ticket ↔ plan alignment; panel argues to consensus. Verdict: READY / NEEDS-WORK / MISALIGNED | git, graphify, expert subagents |
-| implement | `test-driven-implementation` | build the plan task-by-task with TDD (planned) | agent-lsp (find/diagnostics), Claude Code (edit) |
+| implement | `test-driven-implementation` ✅ | build the plan task-by-task with TDD | agent-lsp (find/diagnostics), Claude Code (edit) |
 | **code gate** | `expert-panel-review` ✅ | multi-expert diff/PR review; findings verified by 3 skeptics | git, gh, graphify, expert subagents |
 
 Both gates run as local dynamic workflows, ground themselves in the codebase via **graphify**, and save reports under the project's `docs/reviews/`.
@@ -45,13 +45,13 @@ Planned stages add two more:
 
 ## Status
 
-Early. The two review gates and the plan stage are built and tested. The remaining generative stage (implement) is planned — see [docs/flow.md](docs/flow.md) for the full design and roadmap.
+Early. All four stages are built and tested — see [docs/flow.md](docs/flow.md) for the full design and roadmap.
 
 | Stage | Skill | State |
 |---|---|---|
 | plan | `expert-advised-planning` | ✅ built + tested |
 | plan gate | `plan-readiness-review` | ✅ built + tested |
-| implement | `test-driven-implementation` | planned |
+| implement | `test-driven-implementation` | ✅ built + tested |
 | code gate | `expert-panel-review` | ✅ built + tested |
 
 ## Install (team)

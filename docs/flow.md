@@ -91,7 +91,7 @@ when a richer tool is absent.
    expert panel advises, conflicts are arbitrated, and uncertain/high-stakes ones escalate to
    the human. It pins the plan format both gates and the implement stage depend on, carries its
    own plan-format guide (self-contained), and grounds advisers + arbiter in graphify. ← here.
-4. **`implement` skill** (`test-driven-implementation`) — TDD execution; load project rules; use
+4. **Done** — `test-driven-implementation` (the `implement` stage). TDD execution; load project rules; use
    **agent-lsp** to locate symbols/references and **Claude Code** to edit; run tests each task;
    hand off to the code gate.
 5. **Enforcement** — make the gates non-skippable: a hook or CI check that the plan gate
