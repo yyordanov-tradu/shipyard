@@ -15,7 +15,7 @@
 - Language: plain JavaScript ESM `.mjs`; **no TypeScript**, **no external npm dependencies**. Node ≥ 18.
 - Each `lib/*.mjs` module: `export` pure functions **and** a CLI entry guarded by `import.meta.url === pathToFileURL(process.argv[1]).href`. CLI prints JSON to stdout.
 - Tests: standalone `.mjs`, `node:assert/strict`, run with `node <file>`; print `<name>: PASS` on success. No test framework.
-- Tooling ownership follows `docs/tooling.md` verbatim: lead → graphify (macro, stream analysis); subagents → agent-lsp (micro); Claude Code edits; ripgrep fallback; context7 for unfamiliar APIs. A subagent is given agent-lsp but **not** graphify.
+- Tooling ownership follows `docs/tooling.md` verbatim: lead → graphify (macro, stream analysis); subagents → Serena (micro); Claude Code edits; ripgrep fallback; context7 for unfamiliar APIs. A subagent is given Serena but **not** graphify.
 - Skill name (frontmatter `name:`): `test-driven-implementation`.
 - Output skill folder: `skills/test-driven-implementation/{SKILL.md, lib/, tests/, DESIGN.md, PLAN.md}`.
 - Stable shapes used across tasks:
@@ -441,7 +441,7 @@ description: Build a READY implementation plan into committed code, task by task
 Turn a plan that passed the plan gate into committed code on a feature branch, ready for the
 code gate. Quality comes from a tight per-task loop, not a big prompt. Tool ownership follows
 **docs/tooling.md** (the bible): the lead uses graphify (macro); per-task subagents use
-agent-lsp (micro); Claude Code edits; ripgrep is the fallback.
+Serena (micro); Claude Code edits; ripgrep is the fallback.
 
 **Announce at start:** "Running test-driven implementation."
 
@@ -485,14 +485,14 @@ Create/use a **feature branch** (the integration target). Then, per the schedule
 Give each subagent only:
 - its **own task block** (full), the plan's **shared header**, and a **text slice** of your
   graphify orientation (where this change sits) — never other tasks' text;
-- tools: **agent-lsp** retrieval (symbols/refs/types/diagnostics), **Claude Code** `Edit`/`Write`,
+- tools: **Serena** retrieval (symbols/refs/types/diagnostics), **Claude Code** `Edit`/`Write`,
   **Bash** (verify commands + git in its worktree), **ripgrep**, **context7**. **Not** graphify,
-  **not** agent-lsp's edit tools.
+  **not** Serena's edit tools.
 
-Each subagent runs the loop: **locate** (agent-lsp → ripgrep) → **ground** unfamiliar APIs
+Each subagent runs the loop: **locate** (Serena → ripgrep) → **ground** unfamiliar APIs
 (context7) → **edit test-first** (write failing test → implement → refactor; Claude Code) →
 **verify** (sequence with `node "$LIB/verify-gate.mjs" '<cmdsJson>'`, run steps in order; widen
-with agent-lsp call-hierarchy for impacted tests) → fix to green → return `{branch, status}`.
+with Serena call-hierarchy for impacted tests) → fix to green → return `{branch, status}`.
 
 ## Step 4 — Review between tasks (light)
 
@@ -556,7 +556,7 @@ cp docs/plans/2026-06-18-test-driven-implementation.md skills/test-driven-implem
 - [ ] **Step 2: Mark `implement` built in README**
 
 In `README.md`, in the first stage table, change the implement row's skill cell to add ✅:
-`| implement | \`test-driven-implementation\` ✅ | build the plan task-by-task with TDD | agent-lsp (find/diagnostics), Claude Code (edit) |`
+`| implement | \`test-driven-implementation\` ✅ | build the plan task-by-task with TDD | Serena (find/diagnostics), Claude Code (edit) |`
 and in the Status table change the implement row state to `✅ built + tested`. Update the Status
 prose: the remaining generative stage is no longer pending (all stages built).
 

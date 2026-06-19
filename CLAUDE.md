@@ -43,10 +43,10 @@ straight from the install location, no copy step, nothing written to `~/.claude/
 
 Understanding code happens at two zoom levels, **one owner each, never both for one question**:
 - **Macro** (architecture, where a change fits, module-level blast radius) → **graphify**.
-- **Micro** (exact defs, all callers, types, diagnostics) → **agent-lsp**.
+- **Micro** (exact defs, all callers, types, diagnostics) → **Serena**.
 - Edits → **Claude Code** native `Edit`/`Write` (the single editor). Fallback → **ripgrep**.
 
-In `implement` the lead uses graphify (stream analysis); per-task subagents get agent-lsp but
+In `implement` the lead uses graphify (stream analysis); per-task subagents get Serena but
 **not** graphify. Read `docs/tooling.md` before touching any skill's tool usage.
 
 ## Project principles

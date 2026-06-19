@@ -8,7 +8,7 @@ description: Build a READY implementation plan into committed code, task by task
 Turn a plan that passed the plan gate into committed code on a feature branch, ready for the
 code gate. Quality comes from a tight per-task loop, not a big prompt. Tool ownership follows
 **docs/tooling.md** (the bible): the lead uses graphify (macro); per-task subagents use
-agent-lsp (micro); Claude Code edits; ripgrep is the fallback.
+Serena (micro); Claude Code edits; ripgrep is the fallback.
 
 **Announce at start:** "Running test-driven implementation."
 
@@ -52,14 +52,14 @@ Create/use a **feature branch** (the integration target). Then, per the schedule
 Give each subagent only:
 - its **own task block** (full), the plan's **shared header**, and a **text slice** of your
   graphify orientation (where this change sits) — never other tasks' text;
-- tools: **agent-lsp** retrieval (symbols/refs/types/diagnostics), **Claude Code** `Edit`/`Write`,
+- tools: **Serena** retrieval (symbols/refs/types/diagnostics), **Claude Code** `Edit`/`Write`,
   **Bash** (verify commands + git in its worktree), **ripgrep**, **context7**. **Not** graphify,
-  **not** agent-lsp's edit tools.
+  **not** Serena's edit tools.
 
-Each subagent runs the loop: **locate** (agent-lsp → ripgrep) → **ground** unfamiliar APIs
+Each subagent runs the loop: **locate** (Serena → ripgrep) → **ground** unfamiliar APIs
 (context7) → **edit test-first** (write failing test → implement → refactor; Claude Code) →
 **verify** (sequence with `node "$LIB/verify-gate.mjs" '<cmdsJson>'`, run steps in order; widen
-with agent-lsp call-hierarchy for impacted tests) → fix to green → return `{branch, status}`.
+with Serena call-hierarchy for impacted tests) → fix to green → return `{branch, status}`.
 
 ## Step 4 — Review between tasks (light)
 

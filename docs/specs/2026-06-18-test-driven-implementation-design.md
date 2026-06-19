@@ -63,13 +63,13 @@ so they never collide:
 
 - **Lead → graphify (macro):** stream analysis — which task groups are independent and where
   work happens (Step 1). This is an architecture question, so graphify owns it.
-- **Subagents → agent-lsp (micro):** the per-task loop — exact definitions, all callers, types,
+- **Subagents → Serena (micro):** the per-task loop — exact definitions, all callers, types,
   diagnostics, and which tests a change affects.
 - **context7** (subagents) grounds unfamiliar / low-use third-party APIs before they're called.
 - **Claude Code** native `Edit`/`Write` (subagents) makes every edit (the single editor).
 - **ripgrep** is the fallback when no language server / graph exists.
 - The bible's rule holds: one owner per question, never two understanding tools for the same
-  question. A subagent is given agent-lsp but **not** graphify — it receives the lead's macro
+  question. A subagent is given Serena but **not** graphify — it receives the lead's macro
   orientation pre-digested as text — so "one owner per question" is enforced by *access*, not
   just discipline. Absent tools degrade to ripgrep and are announced, never silently skipped.
 
@@ -84,7 +84,7 @@ N" notes) and partitions them into **streams**:
   sets intersect, OR **graphify** (queried by the lead, refreshed if stale) shows a dependency
   path between the areas they touch, OR an explicit cross-reference links them, OR one consumes
   an artifact the other creates. (Partitioning is a macro/architecture question, so graphify
-  owns the dependency signal here — per the bible; agent-lsp's micro view is used inside the
+  owns the dependency signal here — per the bible; Serena's micro view is used inside the
   per-task loop, not for stream analysis.)
 - A **stream** is a connected component of that relation — internally ordered, independent of
   other streams.
@@ -102,12 +102,12 @@ building.
 
 Each task is built by a fresh subagent, for focused context. The loop:
 
-1. **Locate** the code to change — agent-lsp (symbols/refs) → ripgrep fallback.
+1. **Locate** the code to change — Serena (symbols/refs) → ripgrep fallback.
 2. **Ground** unfamiliar APIs — context7, if the task calls into an unfamiliar library.
 3. **Edit, test-first (TDD)** — write the failing test from the task's steps (red),
    implement until it passes (green), refactor. Edits via Claude Code.
 4. **Verify, cheap → expensive** — typecheck → lint → run the task's tests. Widen safely
-   using agent-lsp call-hierarchy to find impacted tests; fall back to the full suite. Run
+   using Serena call-hierarchy to find impacted tests; fall back to the full suite. Run
    whatever of typecheck/lint/tests the project actually has, in that order.
 5. **Fix until green**, then return to the lead: branch/worktree ref + status.
 
@@ -128,12 +128,12 @@ Tool allowlist — deliberately scoped so it enforces the bible by *access*:
 
 | Subagent has | Subagent does NOT have | Why |
 |---|---|---|
-| **agent-lsp** retrieval (symbols, refs, types, diagnostics, call-hierarchy) | agent-lsp's edit tools | Claude Code is the one editor |
+| **Serena** retrieval (symbols, refs, types, diagnostics, call-hierarchy) | Serena's edit tools | Claude Code is the one editor |
 | **Claude Code** `Edit`/`Write` | — | the single editor |
 | **Bash** (typecheck / lint / tests; git in its worktree) | — | runs the verify gate |
 | **ripgrep**, **context7** | **graphify** (the tool) | macro is the lead's job; the subagent gets the map slice as text |
 
-Because the subagent only has agent-lsp for code intelligence (never graphify), it *cannot*
+Because the subagent only has Serena for code intelligence (never graphify), it *cannot*
 call two understanding tools for the same question.
 
 Division of labor:
@@ -230,7 +230,7 @@ tested the same way — coverage focuses on the deterministic helpers the launch
 ## Dependencies
 
 - **git** — required (branch, commit, worktree, integrate).
-- **agent-lsp** (MCP) — recommended; primary code-intelligence in this stage. Falls back to
+- **Serena** (MCP) — recommended; primary code-intelligence in this stage. Falls back to
   ripgrep when absent.
 - **graphify** — recommended; the lead's macro tool for stream analysis. Falls back to
   grep/smart-explore.

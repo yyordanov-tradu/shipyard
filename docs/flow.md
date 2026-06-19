@@ -71,12 +71,12 @@ calls two tools for the same question:
 | Zoom level | Owner | Used in |
 |---|---|---|
 | **Macro** — architecture, hubs, clusters, dependency paths, module-level blast radius | **graphify** | plan creation + both gates + the `implement` lead's stream analysis |
-| **Micro** — exact definitions, all callers, types, diagnostics, symbol-level blast radius | **agent-lsp** (LSP-backed) | `implement` per-task subagents (optional, for caller checks, in the code gate) |
+| **Micro** — exact definitions, all callers, types, diagnostics, symbol-level blast radius | **Serena** (LSP-backed) | `implement` per-task subagents (optional, for caller checks, in the code gate) |
 | Change code (every edit) | **Claude Code** native `Edit`/`Write` | `implement` subagents |
 | Raw text / unindexed files (fallback) | **ripgrep** | everywhere |
 
-**Short version: graphify maps, agent-lsp gives eyes, Claude Code edits.** graphify and
-agent-lsp both surface "blast radius," but at different zoom levels — macro vs symbol — and a
+**Short version: graphify maps, Serena gives eyes, Claude Code edits.** graphify and
+Serena both surface "blast radius," but at different zoom levels — macro vs symbol — and a
 skill answers a given question with only one of them (see the bible's *Overlap resolution*).
 Also in play: **context7** for grounding unfamiliar library APIs, **git** everywhere, **gh** for
 the code gate's PR mode, and **domain-expert agents** staffing both panels. Tools are wired
@@ -92,7 +92,7 @@ when a richer tool is absent.
    the human. It pins the plan format both gates and the implement stage depend on, carries its
    own plan-format guide (self-contained), and grounds advisers + arbiter in graphify. ← here.
 4. **Done** — `test-driven-implementation` (the `implement` stage). TDD execution; load project rules; use
-   **agent-lsp** to locate symbols/references and **Claude Code** to edit; run tests each task;
+   **Serena** to locate symbols/references and **Claude Code** to edit; run tests each task;
    hand off to the code gate.
 5. **Enforcement** — make the gates non-skippable: a hook or CI check that the plan gate
    returned READY before implementation, and the code gate runs in the PR pipeline.
