@@ -25,16 +25,6 @@ async function parallelLimited(thunks, limit = 4, staggerMs = 0) {
   return out
 }
 
-// ---------- tunables ----------
-const SKEPTICS = 3
-const MAJORITY = Math.floor(SKEPTICS / 2) + 1 // 2 of 3 refute => drop
-const VERIFY_SEVERITIES = ['Critical', 'High', 'Medium'] // Minor passes unverified
-
-// Cap on auto-added conditional experts (frontend/db/infra/language). The 4 ALWAYS_ON
-// experts and the compliance lane are never capped. Override with args.maxConditional.
-// fe/db/infra are added before language experts, so the cap trims languages first.
-const MAX_CONDITIONAL = 4
-
 // A red CI run outranks any expert finding. `gh pr checks` prints tab-separated
 // `<name>\t<state>\t<elapsed>\t<url>`; treat these states as red.
 const CI_RED_STATES = new Set(['fail', 'failure', 'error', 'cancelled', 'timed_out'])
@@ -64,14 +54,6 @@ function splitDiffByFile(diff) {
   flush()
   return map
 }
-
-// ---------- roster ----------
-const ALWAYS_ON = [
-  { agentType: 'backend-architect', lens: 'architecture and correctness: design flaws, wrong logic, broken contracts, missing error handling' },
-  { agentType: 'qa-automation-architect', lens: 'test coverage and test design: missing tests, weak assertions, untested edge cases' },
-  { agentType: 'performance-engineer', lens: 'performance: hot paths, N+1 calls, needless allocations, blocking I/O' },
-  { agentType: 'security-auditor', lens: 'security: injection, secrets in code, authz/authn gaps, unsafe deserialization, SSRF' },
-]
 
 const FE_EXT = ['.tsx', '.jsx', '.vue', '.svelte', '.css', '.scss', '.html']
 const FE_DIRS = /(^|\/)(web|ui|frontend)\//
@@ -111,35 +93,6 @@ const LANG_MAP = {
 function ext(f) {
   const i = f.lastIndexOf('.')
   return i < 0 ? '' : f.slice(i).toLowerCase()
-}
-
-function detectConditional(files, cap = MAX_CONDITIONAL) {
-  const out = []
-  const feFiles = files.filter(
-    (f) =>
-      !INFRA_DIRS.test(f) &&
-      (FE_EXT.includes(ext(f)) || (['.ts', '.js'].includes(ext(f)) && FE_DIRS.test(f)))
-  )
-  if (feFiles.length)
-    out.push({ agentType: 'frontend-developer', lens: 'frontend: component design, state handling, accessibility, rendering correctness', files: feFiles })
-  const dbFiles = files.filter((f) => DB_HINTS.some((rx) => rx.test(f)))
-  if (dbFiles.length)
-    out.push({ agentType: 'database-optimizer', lens: 'database: schema design, migrations, indexes, query efficiency', files: dbFiles })
-  const infraFiles = files.filter((f) => INFRA_DIRS.test(f) || INFRA_EXT.includes(ext(f)))
-  if (infraFiles.length)
-    out.push({ agentType: 'terraform-specialist', lens: 'infrastructure-as-code: resource config, state management, blast radius, drift, and security of provisioned cloud resources', files: infraFiles })
-  // Language experts come last so the cap trims them before fe/db/infra.
-  // Group files by their language agent so each lang expert gets only its files.
-  const byLang = new Map()
-  for (const f of files) {
-    const a = LANG_MAP[ext(f)]
-    if (!a) continue
-    if (!byLang.has(a)) byLang.set(a, [])
-    byLang.get(a).push(f)
-  }
-  for (const [a, fs] of byLang)
-    out.push({ agentType: a, lens: 'language idioms, common pitfalls, and best practices for this language', files: fs })
-  return out.slice(0, cap)
 }
 
 // ---------- change-unit coverage map (inline copy of workflows/lib/units.mjs) ----------
@@ -249,22 +202,6 @@ function assembleReport({ findings = [], ledger = [], failedExperts = [], ciStat
   return out.join('\n') + '\n'
 }
 
-// ---------- opt-in add-on experts ----------
-// The skill offers this menu at startup; the user's picks arrive as args.extraExperts
-// (an array of agentType names) and are merged ON TOP of the auto-detected roster
-// (deduped, never capped). Distinct from rosterOverride, which REPLACES the roster.
-const ADDON_EXPERTS = {
-  'ai-engineer': 'AI/LLM engineering: prompt pipelines, RAG correctness, agent/tool orchestration, token & cost, model-call error handling, eval coverage',
-  'prompt-engineer': 'prompt and instruction quality: system prompts, agent instructions, injection resistance, output-format reliability',
-  'cloud-architect': 'cloud architecture: service choice, cost, scalability, serverless trade-offs, multi-region/DR, IAM and resource security',
-  'kubernetes-architect': 'kubernetes & GitOps: manifests, resource limits, rollout safety, service mesh, multi-tenancy, secrets handling',
-  'devops-troubleshooter': 'operability: observability, logging/tracing/metrics, failure modes, alerting, runbook readiness',
-  'architect-review': 'architecture integrity: clean boundaries, DDD, coupling/cohesion, event-driven correctness, scalability patterns',
-  'code-reviewer': 'general code quality: readability, maintainability, naming, duplication, dead code, simplicity',
-  'api-documenter': 'API surface & docs: contract completeness, OpenAPI accuracy, versioning, breaking changes, examples',
-  'graphql-architect': 'GraphQL design: schema/type design, federation, N+1 resolvers, query depth/cost limits, field-level auth',
-  'data-engineer': 'data engineering: pipeline correctness, schema & ingestion, streaming/batch, idempotency, data quality',
-}
 
 // ---------- schemas ----------
 const FINDINGS_SCHEMA = {
@@ -284,47 +221,6 @@ const FINDINGS_SCHEMA = {
           detail: { type: 'string' },
           suggestion: { type: 'string' },
           causeFiles: { type: 'array', items: { type: 'string' } },
-        },
-        required: ['severity', 'file', 'line', 'title', 'detail', 'suggestion'],
-      },
-    },
-  },
-  required: ['findings'],
-}
-const VERDICT_SCHEMA = {
-  type: 'object',
-  additionalProperties: false,
-  properties: { refuted: { type: 'boolean' }, reason: { type: 'string' } },
-  required: ['refuted', 'reason'],
-}
-const GROUNDING_SCHEMA = {
-  type: 'object',
-  additionalProperties: false,
-  properties: {
-    grounded: { type: 'boolean' },
-    reason: { type: 'string' },
-  },
-  required: ['grounded', 'reason'],
-}
-const DEDUP_FINDINGS_SCHEMA = {
-  type: 'object',
-  additionalProperties: false,
-  properties: {
-    findings: {
-      type: 'array',
-      items: {
-        type: 'object',
-        additionalProperties: true,
-        properties: {
-          severity: { type: 'string', enum: ['Critical', 'High', 'Medium', 'Minor'] },
-          file: { type: 'string' },
-          line: { type: 'integer' },
-          title: { type: 'string' },
-          detail: { type: 'string' },
-          suggestion: { type: 'string' },
-          expert: { type: 'string' },
-          verification: { type: 'string' },
-          experts: { type: 'array', items: { type: 'string' } },
         },
         required: ['severity', 'file', 'line', 'title', 'detail', 'suggestion'],
       },
@@ -368,15 +264,12 @@ const {
   diff = '',
   changedFiles = [],
   baseRef = '',
-  rosterOverride = null,
   rules = '',
   date = '',
   designDocs = '',
   repoPath = '',
   ciStatus = '',
   testCommand = '',
-  maxConditional = MAX_CONDITIONAL,
-  extraExperts = [],
 } = input
 
 // ---------- one config block, read AFTER args are parsed (the single source of tunables;
@@ -384,7 +277,6 @@ const {
 const CONFIG = {
   concurrency: Number(input.concurrency) || FANOUT_LIMIT,
   staggerMs: Number(input.staggerMs) || 0,
-  maxConditional,
   granularity: input.granularity || 'file',
   k: Number(input.k) || 1,
   lineBand: Number(input.lineBand) || 2,
