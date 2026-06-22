@@ -1,0 +1,56 @@
+# Shipyard Code Gate: 6 Paradigms — Decision-Ready Comparison
+
+## The real choice
+
+The code gate exists to do one thing the current panel cannot: **find every real Critical/High and return the same verdict on it run-to-run.** All six paradigms agree the lens panel fails for the same root reason — recall is frozen at one stochastic "noticing" draw per lens, then every later stage only subtracts. The real fork is *where you put the stochasticity you cannot delete.* You can hide it in a stopping signal (agentic loop), in an edge-inference step (change-unit), in a generation step (hypothesis ledger), in a map-builder (codebase-model), in correlated samples (ensemble), or in an obligation enumerator (Crucible). Every critique lands the same blow: the paradigm stabilizes the *easy* defects and quietly relocates the flicker onto the *hard* one — the cross-file symptom whose cause lives in unchanged code. So the choice is not "which design is cleverest" but **which design makes its residual stochasticity (a) smallest, (b) confined to a lane that can only ADD findings never drop them, and (c) backed by a verification rule where "couldn't prove it safe" blocks instead of passing.** Note the scores are clustered and mediocre (recall 2–4 across the board) — there is no clean winner, so the honest output is a hybrid spine plus grafts.
+
+## Comparison table
+
+| Paradigm | Workflow | Lens | Skeptic | Recall | Verif | Simpl | Cost | Fit | Fatal flaw (one line) |
+|---|---|---|---|---|---|---|---|---|---|
+| **agentic-investigator** | replace w/ adaptive loop + det. ledger | replace w/ failure-hypothesis | replace w/ confirm-by-evidence | 2 | 2 | 2 | 2 | 4 | Hangs recall on a *stochastic stopping signal* — depth is a random walk, misses leave no trace, and the eval can't see the one new thing it sells. |
+| **change-unit (Unit-Sentinel)** | keep det. JS engine | replace w/ change-unit + full-spectrum rubric | replace w/ relabel-only verify | 3 | 4 | 2 | 2 | 4 | Edge set (the cross-file tier) is built from approximate/absent graphify + ripgrep + a stochastic reviewer draw — the hard defect still flickers. |
+| **hypothesis-falsify (Ledger)** | keep det. skeleton + bounded inner loop | replace w/ change-unit × failure-template | replace w/ confirm-by-reproduction | 4 | 4 | 2 | 2 | 3 | "Unconfirmed-still-blocks" only protects a Critical *after* it's generated; generation is still one stochastic draw, so an ungenerated Critical silently passes. |
+| **codebase-model-first (Blast-Radius)** | keep det. spine + bounded frontier | replace w/ invariant-over-blast-radius | replace w/ confirm-by-evidence (abstain blocks) | 3 | 4 | 2 | 3 | 3 | The "deterministic map" hides a stochastic invariant-naming agent + a catalog/graph completeness ceiling, then validates with a metric that only sees inside itself. |
+| **ensemble-minimalist (DEEPSCAN)** | shrink det. JS engine | discard (none) | discard (agreement only) | 2 | 4 | 5 | 3 | 4 | M warm draws of one generalist are *correlated*; the rare specialty/cross-file Critical is a STABLE zero union can't fix and Jaccard can't see. |
+| **wildcard (Crucible)** | det. spine + bounded discovery net | replace w/ falsifiable obligations | replace w/ confirm-by-reproduction (tiered) | 2 | 4 | 2 | 2 | 3 | Obligation enumeration *is* the noticing act, renamed; deterministic only for mechanical/compiler-grade defects, stochastic for every semantic Critical. |
+
+## What each paradigm really is, and when it wins
+
+**agentic-investigator** — One adaptive agent runs a hypothesis-investigation loop until K dry rounds, backed by a deterministic append-only ledger. It wins when defects are deeply chained and unpredictable and you value reach over predictable cost. It loses here because "dry" is itself an LLM judgment, so two runs reach different depths — flicker moved deeper and made invisible.
+
+**change-unit (Unit-Sentinel)** — Slice the diff by change unit (hunk/symbol), give each tiny unit one full-spectrum reviewer with k replicas, plus a deterministic integration tier for edges. It wins on *single-unit, on-diff* defects, where small attention surface genuinely raises and stabilizes detection. It loses on cross-unit defects because the edge set — the only thing that catches them — is not a deterministic function of the diff.
+
+**hypothesis-falsify (Ledger)** — The unit of the gate becomes a falsifiable hypothesis ("X breaks Y because Z"); generate broad, confirm by running a test that's red on head / green on base, and an unconfirmed Critical blocks. Highest recall score (4) and the strongest verification idea on the table. It wins when defects are reproducible by a cheap test. It loses because generation is still one stochastic draw and reproduction covers only a minority of real defects.
+
+**codebase-model-first (Blast-Radius)** — Stop reviewing the diff; review the model it perturbs. Build a blast-radius map via graphify (macro) + Serena (micro), index invariants on it, review every (invariant, site) pair. It wins where the dependency graph is rich and tools are present, giving a cost curve that scales with risk. It loses because invariant *naming* is a hidden stochastic draw laundered into a "deterministic map," and most generic installs lack the tools it leans on.
+
+**ensemble-minimalist (DEEPSCAN)** — Delete the panel, the lenses, and the skeptic; run M unrestricted whole-change reviewers and union them in pure JS. By far the simplest (5) and the cleanest to verify. It wins on cost and maintainability for repos where defects are obvious and broad. It loses on the exact defect the gate exists for: correlated draws share blind spots, so the rare Critical is a stable zero.
+
+**wildcard (Crucible)** — Enumerate a finite set of falsifiable obligations from the change, discharge each by execution/symbol-exact fact, treat unanswerable as a block. It wins for *mechanical* obligations (signature change → all-callers-updated), where "same diff → same obligation IDs" is literally true and offline-unit-testable. It loses because semantic Criticals have no closed obligation vocabulary, so they fall back to the stochastic discovery net.
+
+## Recommendation: a HYBRID — change-unit spine, ledger/reproduction verification, blast-radius edge generation
+
+Take **change-unit (Unit-Sentinel) as the spine.** It scores best on the combination that matters for the #1 goal: it makes the *coverage map* deterministic (same diff → same units, every run), it has the highest verifiability of the structural approaches (4), and its critique concedes its on-diff stability is *real* — small attention surface plus a full-concern rubric genuinely raises and steadies per-unit detection. That deterministic coverage map is the single property "recall-stability-first" most needs, and it is the one DEEPSCAN throws away and the agentic loop never has.
+
+The spine's one true hole is cross-unit / cause-in-unchanged-code defects. Fix it with two grafts the critiques independently flagged as the strongest severable ideas:
+
+1. **Generate cross-file edges from the blast-radius model, not from a stochastic reviewer.** Take codebase-model-first's discipline of separate, never-reconciled graphify (macro) and Serena (micro) edge sets, and make every finding carry its full reachable site set — caller/cause files, including unchanged ones — so verification receives the same multi-file context the finding was born with. This is the structural answer to "verify-from-own-file drops cross-file truths."
+
+2. **Verify by reproduction, and make verification recall-safe.** Adopt the Ledger's confirm-by-reproduction (red on head / green on base, the one signal that does not flicker) as the *preferred* verifier, applied opportunistically — never as the gate spine, because it covers only a minority of defects. Wrap it in the rule three independent paradigms converged on: **a finding leaves the blocking set ONLY on cited counter-evidence; "cannot prove safe" is an abstain that STILL BLOCKS.** That rule, plus "a failed/timed-out reviewer forces REQUEST-CHANGES," is what structurally forbids a real Critical from being voted or sampled out.
+
+Why this and not the alternatives: the Ledger (recall 4) is tempting, but its generation step is one stochastic draw — the spine's deterministic unit coverage is a strictly better generation guarantee than "broad generators," and we keep its verification half anyway. DEEPSCAN's simplicity (5) is real but it deletes the coverage map; correlated blind spots are a worse failure than complexity. The agentic loop and Crucible both relocate flicker into an invisible lane. The honest framing: **this hybrid does not eliminate stochasticity — it confines it to edge-completeness (a measurable, fixable gap) and to a verification lane that can only ADD or RELABEL, never silently drop.** That is the most the evidence supports.
+
+Cheap shared wins to take regardless of direction: lift `parallelLimited` into a shared lib (all six asked for it), make report assembly pure JS (kills the preamble-leak class), and add `removed-safety` as an explicit unit/obligation kind so deletion-only changes still get a dedicated reviewer.
+
+## Decisions the human must lock
+
+1. **Spine: deterministic coverage map (change-unit) vs. broad sampling (Ledger/DEEPSCAN).** This is the core fork. Pick the map if "same diff → same review every run" is the top value; pick sampling if you'd rather buy recall with raw draws and accept correlated blind spots. The recommendation picks the map — confirm or override.
+
+2. **Cross-file edges: tool-derived (graphify/Serena) vs. reviewer-derived (stochastic causeUnit).** Tool-derived is more stable but degrades hard in generic installs *without* graphify/Serena. You must decide the **no-tools recall floor** you'll accept and require the eval to measure it — because that floor is where every structural paradigm's guarantee evaporates.
+
+3. **Reproduction: gate-blocking spine vs. opportunistic confidence-raiser.** Running tests/`git worktree` per finding is the least-stochastic signal but slow, flaky, and absent in many repos. Decide whether a passing/failing probe can *block* or only *raise confidence* — the recommendation says opportunistic-only, with abstain-still-blocks as the real backstop.
+
+4. **The block-rate / alert-fatigue tradeoff.** "Unconfirmed-Critical-still-blocks" is what makes recall stable, but it will produce false-positive blocks. Decide the acceptable block rate and whether developers can ignore/override — if they start ignoring the gate, recall stability on paper buys nothing in practice.
+
+5. **The primary eval gate and its corpus.** All six converge on **worst-single-run seeded-Critical recall = 1.0** (the metric a stable miss cannot hide from) with Jaccard ≥ 0.9 demoted to a flicker check. Lock this — and lock that the corpus MUST seed the adversarial cases (cross-file symptom/cause, cause-in-unchanged-code, single-witness rare Critical, adjacent-must-split, two-phrasings-must-merge, deletion-only change), since every paradigm's blind spot is invisible to an eval that doesn't seed it.
