@@ -271,6 +271,19 @@ const {
   extraExperts = [],
 } = input
 
+// ---------- one config block, read AFTER args are parsed (the single source of tunables;
+// later change-unit stages read granularity/k/lineBand/titleThreshold/criticalRefuters from here) ----------
+const CONFIG = {
+  concurrency: Number(input.concurrency) || FANOUT_LIMIT,
+  staggerMs: Number(input.staggerMs) || 0,
+  maxConditional,
+  granularity: input.granularity || 'file',
+  k: Number(input.k) || 1,
+  lineBand: Number(input.lineBand) || 2,
+  titleThreshold: Number(input.titleThreshold) || 0.5,
+  criticalRefuters: Number(input.criticalRefuters) || 2,
+}
+
 // Two ways to feed the panel the changed code:
 // - REPO MODE (preferred for large/whole PRs): pass `repoPath` + `baseRef` and NO diff.
 //   Each agent reads only the files in its lane via `git diff`, so the launcher never
@@ -472,7 +485,7 @@ ${changeView([f.file])}`,
         verification: `survived ${valid.length - refutes}/${valid.length} skeptics`,
       }
     })
-    return (await parallelLimited(checks, FANOUT_LIMIT)).filter(Boolean)
+    return (await parallelLimited(checks, CONFIG.concurrency, CONFIG.staggerMs)).filter(Boolean)
   }
 )
 
