@@ -39,16 +39,16 @@ const review = (calls, path) => calls.find((c) => c.opts.label === `review:unit:
     if (label === 'review:unit:web/app.tsx')
       return { findings: [{ severity: 'High', file: 'web/app.tsx', line: 2, title: 'x', detail: 'd', suggestion: 's' }] }
     if (label.startsWith('review:')) return { findings: [] }
-    if (label.startsWith('skeptic:')) return { refuted: false, reason: 'ok' }
+    if (label.startsWith('verify:')) return { classification: 'plausible', citation: '', reason: 'ok' }
     if (label === 'dedup') { const m = 'FINDINGS JSON:\n'; return { findings: JSON.parse(prompt.slice(prompt.indexOf(m) + m.length)) } }
     if (label === 'ledger') return { ledger: [] }
     return '# report'
   }
   const { calls } = await runWorkflow(SCRIPT, { args: { diff: DIFF, changedFiles: CHANGED, rules: '', date: '' }, agentImpl: impl })
-  const skeptics = calls.filter((c) => c.opts.label?.startsWith('skeptic:'))
-  assert.equal(skeptics.length, 3, 'one High -> 3 skeptics')
-  for (const s of skeptics)
-    assert.ok(s.prompt.includes('MARKER_TSX') && !s.prompt.includes('MARKER_SQL'), 'skeptic scoped to finding file')
+  const verifies = calls.filter((c) => c.opts.label?.startsWith('verify:'))
+  assert.equal(verifies.length, 2, 'one High -> 2 verifiers (criticalRefuters)')
+  for (const v of verifies)
+    assert.ok(v.prompt.includes('MARKER_TSX') && !v.prompt.includes('MARKER_SQL'), 'verifier scoped to finding file')
 }
 
 // 3) Repo mode: no diff blob — units are reviewed via a git command.
