@@ -1,14 +1,14 @@
 ---
 name: expert-panel-review
-description: Review a code diff with a panel of domain-expert subagents (backend, QA, performance, security, compliance + conditional frontend/database/language experts), verify Critical/High/Medium findings with 3 independent skeptics, and save one consolidated review grouped by expert. Use when asked for an expert panel review, a multi-expert review, or a deep local review of a diff, PR, or set of files.
+description: Review a code change with the change-unit code gate — an expert-matched reviewer per changed file plus a whole-change cross-cutting tier (security/integration/architecture/performance/compliance), classify-by-evidence verification (a finding is dropped only on cited counter-evidence; a Critical/High is never silently dropped), and a deterministic verdict + report. Use when asked for a code-gate review, an expert review of a diff/PR, or a deep local review of a change.
 ---
 
-# Expert Panel Review
+# Expert Panel Review — change-unit code gate
 
-Run a multi-expert review of a code diff as a local dynamic workflow, then save the
-consolidated review under the project's `docs/reviews/`.
+Run the code gate as a local dynamic workflow, then save the consolidated review under the
+project's `docs/reviews/`.
 
-**Announce at start:** "Running the expert panel review."
+**Announce at start:** "Running the code gate review."
 
 ## Step 1 — Parse the argument
 
@@ -20,11 +20,10 @@ order (first match wins):
    a file with that name exists).
 3. **Every comma-separated token names an existing file/dir** → review exactly
    those paths.
-4. **Any token matches an available agent type** (one name or a comma-separated
-   list, e.g. `security-auditor` or `security-auditor,python-pro`) → roster
-   override: run ONLY those experts on the default diff. If a named agent does
-   not exist in the available agent types, warn the user and continue without it.
-5. **Nothing matches** → ask the user what they meant; do not guess.
+4. **Nothing matches** → ask the user what they meant; do not guess.
+
+(The reviewer panel is determined by the CHANGE — one expert-matched reviewer per changed
+file plus a fixed cross-cutting tier — so there is no manual roster/expert override.)
 
 ## Step 2 — Resolve the diff and changed files
 
@@ -205,14 +204,19 @@ date with `date -u +%F`. Then invoke the **Workflow** tool:
     "diff": "<contents of /tmp/epr-diff.txt — OR omit/empty in repo mode>",
     "changedFiles": ["<one entry per line of /tmp/epr-files.txt, deduplicated>"],
     "baseRef": "<the merge-base SHA from Step 2 — required for repo mode>",
-    "rosterOverride": null,
     "repoPath": "<the repoPath value: PR-mode worktree dir, else $proj>",
     "rules": "<contents of /tmp/epr-rules.txt>",
     "designDocs": "<contents of /tmp/epr-designdocs.txt>",
     "ciStatus": "<contents of /tmp/epr-ci.txt; empty string in default/paths mode>",
+    "testCommand": "<the target repo's test command, for OPTIONAL reproduction — e.g. 'npm test', 'pytest'; '' if none>",
     "date": "<YYYY-MM-DD>"
   }
   ```
+  Discover `testCommand` from the target repo (package.json `scripts.test` → `npm test`;
+  `pyproject.toml` → `pytest`; `Cargo.toml` → `cargo test`; `go.mod` → `go test ./...`; else
+  `""`). It only enables an opt-in reproduce step in verify; absence never blocks.
+  Optional tunables (defaults are fine — only set if asked): `granularity` (per-file),
+  `k` (review draws per unit, 1), `concurrency`, `lineBand`, `titleThreshold`, `criticalRefuters` (2).
   **Pick the mode by diff size:**
   - **Repo mode (preferred for anything large, and the default when `repoPath` + `baseRef`
     are both set):** pass `baseRef` + `repoPath` and **omit `diff`** (or pass `""`). The
@@ -224,9 +228,14 @@ date with `date -u +%F`. Then invoke the **Workflow** tool:
     each agent only sees its lane's hunks. Use this when there is no `baseRef`/`repoPath`, or
     when untracked files must be reviewed.
 
-  In roster-override mode set `rosterOverride` to the array of agent names instead
-  of null. `repoPath`/`baseRef` are not read from files — they are the values you set in
-  Step 2.
+  `repoPath`/`baseRef` are not read from files — they are the values you set in Step 2.
+
+**How the engine reviews (for context):** it partitions the change into units (one per file),
+gives each unit an expert-matched reviewer, runs a whole-change cross-cutting tier
+(security/integration/architecture/performance + compliance), unions findings deterministically,
+then verifies each by EVIDENCE — a finding is dropped only on cited counter-evidence, and a
+Critical/High is never silently dropped (a cited-refuted one is marked "suppressed — needs human
+eyes" but still blocks). The verdict and report are assembled deterministically (byte-stable).
 
 The workflow returns `{ report, findings, ledger, failedExperts, panel, date, verdict }`.
 `ledger` is the verification ledger (load-bearing claims marked verified /
@@ -260,8 +269,8 @@ error to the user and STOP — never write an empty review file.
 
 ## Cost note
 
-Each run spawns roughly: panel size (4–8) + 3 × (Critical/High/Medium findings) +
-1 × (Minor findings) + 1 (dedup) + 1 (verification ledger) + 1 (synthesis) agents.
-Critical/High/Medium each get 3 skeptics; Minor findings also cost 1 self-check agent
-each; the verification ledger runs once per review (always, even with zero findings).
-Tell the user this before running ONLY if they ask about cost; otherwise just run.
+Each run spawns roughly: (units × `k`) per-unit reviewers + ~4–5 cross-cutting reviewers +
+(`criticalRefuters` for each Critical/High finding, 1 for each Medium/Minor) verifiers +
+1 (verification ledger). Union and the report/verdict are deterministic JS (no agent). So agent
+count scales with the SIZE of the change (number of changed files), not a fixed panel. Tell the
+user this before running ONLY if they ask about cost; otherwise just run.

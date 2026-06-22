@@ -17,7 +17,7 @@ Work enters as a Jira ticket. Each stage is a skill; the two **gates** are the s
 | plan | `expert-advised-planning` ✅ | turn a Jira ticket (or pasted spec) into a plan; lead drafts after an expert panel advises, conflicts arbitrated, escalated to a human when uncertain/high-stakes | graphify, expert subagents |
 | **plan gate** | `plan-readiness-review` ✅ | ticket ↔ plan alignment; panel argues to consensus. Verdict: READY / NEEDS-WORK / MISALIGNED | git, graphify, expert subagents |
 | implement | `test-driven-implementation` ✅ | build the plan task-by-task with TDD; a lead splits the plan into independent streams, a fresh subagent builds each task | Serena (find/diagnostics, optional — ripgrep fallback), Claude Code (edit) |
-| **code gate** | `expert-panel-review` ✅ | multi-expert diff/PR review; findings verified by 3 skeptics | git, gh, graphify, expert subagents |
+| **code gate** | `expert-panel-review` ✅ | change-unit review: an expert-matched reviewer per changed file + a cross-cutting tier; findings verified by evidence (dropped only on cited counter-evidence) | git, gh, graphify, Serena, expert subagents |
 
 The plan stage and both gates run as **local dynamic Workflow engines** (explained below),
 ground their experts in the real codebase via **graphify**, and the gates save their reports

@@ -1,13 +1,12 @@
 export const meta = {
   name: 'expert-panel-review',
   description:
-    'Multi-expert diff review: parallel expert panel, 3-skeptic verification of Critical/High/Medium findings, synthesis grouped by expert',
+    'Change-unit code review: an expert-matched reviewer per changed unit + a whole-change cross-cutting tier (security/integration/architecture/performance/compliance), classify-by-evidence verification (drop only on cited counter-evidence; Critical/High never silently dropped), deterministic union + report.',
   phases: [
-    { title: 'Review', detail: 'parallel expert reviewers' },
-    { title: 'Verify', detail: '3 skeptics per Critical/High/Medium finding' },
-    { title: 'Dedup', detail: 'merge near-duplicate findings across experts' },
+    { title: 'Review', detail: 'expert-matched reviewer per change unit + cross-cutting tier' },
+    { title: 'Verify', detail: 'classify each finding by evidence; drop only on cited counter-evidence' },
     { title: 'Verify claims', detail: 'ledger of load-bearing claims' },
-    { title: 'Synthesize', detail: 'one consolidated review grouped by expert' },
+    { title: 'Assemble', detail: 'deterministic verdict + byte-stable report' },
   ],
 }
 

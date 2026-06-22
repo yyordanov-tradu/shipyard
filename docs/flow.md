@@ -33,7 +33,7 @@ and they already exist.
 | `plan` | turn the ticket into a task-by-task build plan in shipyard's format | write code |
 | `plan-readiness-review` | judge ticket↔plan alignment, return READY / NEEDS-WORK / MISALIGNED | fix the plan |
 | `implement` | build the plan with TDD, using the right tools | re-decide the design |
-| `expert-panel-review` | judge the diff, verify findings with skeptics | merge or deploy |
+| `expert-panel-review` | judge the change (per-unit + cross-cutting reviewers), verify findings by evidence | merge or deploy |
 
 ## Core principle: own the interfaces, borrow the engines
 
@@ -107,6 +107,15 @@ when a richer tool is absent.
    `git diff`; in **inline mode** the engine slices the diff per file. So large/initial PRs
    review in one run instead of hitting the ~150 KB ceiling. See
    [docs/specs/2026-06-18-scalable-diff-review-design.md](specs/2026-06-18-scalable-diff-review-design.md).
+8. **Done** — **Code gate redesign (change-unit).** A first-principles rebuild of the code gate:
+   the lens panel + skeptic vote + LLM dedup/synthesis are replaced by a deterministic unit
+   coverage map (one expert-matched reviewer per changed file) + a cross-cutting tier + classify-
+   by-evidence verification (drop only on cited counter-evidence; Critical/High never silently
+   dropped) + deterministic union/verdict/report. Stability is by construction (unit-tested), not
+   a live eval. See
+   [docs/specs/2026-06-22-code-gate-change-unit-design.md](specs/2026-06-22-code-gate-change-unit-design.md)
+   and the paradigm comparison that chose it
+   ([2026-06-22-code-gate-paradigm-comparison.md](specs/2026-06-22-code-gate-paradigm-comparison.md)).
 
 ## Build order rationale
 
