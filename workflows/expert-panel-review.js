@@ -11,6 +11,21 @@ export const meta = {
   ],
 }
 
+// ---------- bounded fan-out (inline copy of workflows/lib/parallel.mjs — the lib is the
+// canonical, unit-tested source; the engine runs as an AsyncFunction body and cannot import) ----------
+const FANOUT_LIMIT = 8
+async function parallelLimited(thunks, limit = 4, staggerMs = 0) {
+  const n = Math.max(1, limit | 0)
+  const out = []
+  const settle = (t) => Promise.resolve().then(t).then((v) => v, () => null)
+  for (let i = 0; i < thunks.length; i += n) {
+    const wave = thunks.slice(i, i + n)
+    out.push(...(await Promise.all(wave.map(settle))))
+    if (staggerMs && i + n < thunks.length) await new Promise((r) => setTimeout(r, staggerMs))
+  }
+  return out
+}
+
 // ---------- tunables ----------
 const SKEPTICS = 3
 const MAJORITY = Math.floor(SKEPTICS / 2) + 1 // 2 of 3 refute => drop
@@ -410,7 +425,7 @@ ${changeView([f.file])}`,
       const skepticRepoBlock = (!repoMode && REPO)
         ? `You MAY open files under \`${REPO}\` to confirm or refute; if you cannot find the problem in the real code, set refuted=true.\n`
         : ''
-      const votes = await parallel(
+      const votes = await parallelLimited(
         Array.from({ length: SKEPTICS }, (_, i) => () =>
           agent(
             `You are skeptic #${i + 1} of ${SKEPTICS}, working independently. Try to
@@ -457,7 +472,7 @@ ${changeView([f.file])}`,
         verification: `survived ${valid.length - refutes}/${valid.length} skeptics`,
       }
     })
-    return (await parallel(checks)).filter(Boolean)
+    return (await parallelLimited(checks, FANOUT_LIMIT)).filter(Boolean)
   }
 )
 
