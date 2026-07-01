@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "graphify": {
+      "command": "bash",
+      "args": [
+        "-lc",
+        "exec \"$HOME/.local/share/uv/tools/graphifyy/bin/python\" -m graphify.serve graphify-out/graph.json"
+      ]
+    }
+  }
+}
