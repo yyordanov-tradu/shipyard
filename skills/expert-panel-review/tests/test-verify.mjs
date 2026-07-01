@@ -37,6 +37,8 @@ const { result, calls } = await runWorkflow(SCRIPT, {
 // Cross-file: the verify prompt for the Critical includes its causeFiles (lesson-B regression guard).
 const xfile = calls.find((c) => c.opts.label?.startsWith('verify:') && c.prompt.includes('"title":"cross-file-bug"'))
 assert.ok(xfile.prompt.includes('other.py'), 'verify of a cross-file finding includes its causeFiles')
+// Verifiers are told to use Serena for exact caller/definition lookups, degrading transparently.
+assert.ok(/Serena/.test(xfile.prompt) && xfile.prompt.includes('Serena absent'), 'verify prompt names Serena with use-if-present/else-announce contract')
 
 // Verifier counts: Critical/High -> criticalRefuters (2); Medium -> 1.
 const vCount = (t) => calls.filter((c) => c.opts.label?.startsWith('verify:') && c.prompt.includes(`"title":"${t}"`)).length

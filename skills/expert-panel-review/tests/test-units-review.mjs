@@ -47,6 +47,14 @@ assert.ok(!byPath['web/app.tsx'].prompt.includes('svc/handler.py'), 'reviewer pr
 // Deletion-only unit is flagged to its reviewer.
 assert.ok(/DELETION-ONLY/.test(byPath['auth/guard.py'].prompt), 'deletion-only reviewer warned about removed protection')
 
+// Per-unit (micro) reviewers are told to use Serena for exact caller checks, with the
+// use-if-present/else-announce contract — and NOT graphify (the macro tool is the
+// cross-cutting tier's, per the one-zoom-level rule in docs/tooling.md).
+const unitPrompt = byPath['svc/handler.py'].prompt
+assert.ok(/Serena/.test(unitPrompt), 'per-unit reviewer names Serena for caller checks')
+assert.ok(unitPrompt.includes('Serena absent'), 'per-unit reviewer degrades transparently when Serena is absent')
+assert.ok(!/graphify/.test(unitPrompt), 'per-unit (micro) reviewer does NOT get graphify (macro belongs to the cross-cutting tier)')
+
 // Findings schema carries causeFiles (the cross-file hook).
 assert.ok(
   byPath['web/app.tsx'].opts.schema.properties.findings.items.properties.causeFiles,
