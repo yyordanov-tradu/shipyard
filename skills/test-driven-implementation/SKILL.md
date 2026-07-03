@@ -52,14 +52,20 @@ Create/use a **feature branch** (the integration target). Then, per the schedule
 Give each subagent only:
 - its **own task block** (full), the plan's **shared header**, and a **text slice** of your
   graphify orientation (where this change sits) — never other tasks' text;
-- tools: **Serena** retrieval (symbols/refs/types/diagnostics), **Claude Code** `Edit`/`Write`,
-  **Bash** (verify commands + git in its worktree), **ripgrep**, **context7**. **Not** graphify,
-  **not** Serena's edit tools.
+- tools: **Serena** retrieval for symbol/structure visibility — `get_symbols_overview` (map a
+  file/module's structure before touching it), `find_symbol` (jump to an exact definition),
+  `find_referencing_symbols` (every caller), `get_diagnostics_for_file` (types/errors) — plus
+  **Claude Code** `Edit`/`Write`, **Bash** (verify commands + git in its worktree), **ripgrep**,
+  **context7**. **Not** graphify, **not** Serena's edit tools.
 
-Each subagent runs the loop: **locate** (Serena → ripgrep) → **ground** unfamiliar APIs
-(context7) → **edit test-first** (write failing test → implement → refactor; Claude Code) →
-**verify** (sequence with `node "$LIB/verify-gate.mjs" '<cmdsJson>'`, run steps in order; widen
-with Serena call-hierarchy for impacted tests) → fix to green → return `{branch, status}`.
+Each subagent runs the loop: **locate** — map structure first with Serena `get_symbols_overview`,
+then `find_symbol` for the exact definition and `find_referencing_symbols` for every caller, so the
+edit's blast radius is visible *before* you touch code; fall back to ripgrep and say "Serena absent
+— text search only" when Serena isn't wired → **ground** unfamiliar APIs (context7) → **edit
+test-first** (write failing test → implement → refactor; Claude Code) → **verify** (sequence with
+`node "$LIB/verify-gate.mjs" '<cmdsJson>'`, run steps in order; widen with Serena
+`find_referencing_symbols` / call-hierarchy to find the tests this change impacts) → fix to green →
+return `{branch, status}`.
 
 ## Step 4 — Review between tasks (light)
 
