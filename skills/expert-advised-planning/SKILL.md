@@ -72,9 +72,14 @@ missing/empty, show the error and STOP — never write an empty plan.
 
 1. Slug: a short kebab-case name from the source title.
 2. `mkdir -p "$proj/docs/plans"` and write `plan` to `"$proj/docs/plans/<date>-<slug>.md"`.
-3. Print: the panel, conflicts (auto-resolved vs escalated), graph mode, any failed advisers,
+3. **Round-trip check** (the plan is machine-read downstream):
+   `node "${CLAUDE_PLUGIN_ROOT}/skills/test-driven-implementation/lib/plan-parse.mjs" "<plan-path>"`.
+   If it reports **0 tasks**, warn loudly: the plan misses the task grammar (`### Task N: <title>`
+   headings, a `**Files:**` block with backticked paths, "depends on Task N") and the readiness
+   gate will return NEEDS-WORK until it is fixed. Otherwise print the parsed task count.
+4. Print: the panel, conflicts (auto-resolved vs escalated), graph mode, any failed advisers,
    the path.
-4. Remind the user the next step is the **plan-readiness-review** gate.
+5. Remind the user the next step is the **plan-readiness-review** gate.
 
 ## Cost note
 

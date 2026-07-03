@@ -43,6 +43,13 @@ const spec = (a.spec || '').trim()
 const plan = (a.plan || '').trim()
 if (!spec || !plan) return { error: 'missing spec or plan' }
 
+// Machine-readability check, run by the skill with the canonical parser
+// (skills/test-driven-implementation/lib/plan-parse.mjs) — the engine sandbox cannot run it.
+// A finite number means the check ran; 0 means the implement stage would see no tasks.
+const planTaskCount = typeof a.planTaskCount === 'number' && Number.isFinite(a.planTaskCount)
+  ? a.planTaskCount
+  : null
+
 // ---------- roster (filled in Task 3) ----------
 const ALWAYS_ON = [
   { key: 'architecture', agentType: 'architect-review',
@@ -340,10 +347,13 @@ function foldConsensus(gaps, reactions) {
   })
 }
 
-function computeVerdict(consensus, matrix) {
+function computeVerdict(consensus, matrix, planTaskCount) {
   const live = consensus.filter((c) => c.status !== 'dropped')
   const agreed = live.filter((c) => c.status === 'agreed')
   if (agreed.some((c) => c.severity === 'Blocker')) return 'MISALIGNED'
+  // The implement stage machine-reads the plan; a plan that parses to zero tasks cannot
+  // be built no matter how good its content is. Content misalignment (above) still wins.
+  if (planTaskCount === 0) return 'NEEDS-WORK'
   // A contested Blocker is a genuine, unresolved disagreement about a blocking problem.
   // The spec excludes it from READY ("only Minors and contested-non-blockers remain"), so
   // it must block — otherwise a tie on a showstopper silently passes the gate.
@@ -368,7 +378,10 @@ function renderCoverage(matrix) {
   ].join('\n')
 }
 
-function renderReport({ verdict, consensus, matrix, date, panel, narrative, failedExperts, added }) {
+function renderReport({ verdict, consensus, matrix, date, panel, narrative, failedExperts, added, planTaskCount }) {
+  const parseBlock = planTaskCount === 0
+    ? '\n**Plan format check: FAILED** — the canonical parser (plan-parse) found 0 tasks, so the plan is not machine-readable by the implement stage. Use the task grammar: `### Task N: <title>` headings, a `**Files:**` block with backticked paths, and the literal phrase "depends on Task N".'
+    : ''
   const live = consensus.filter((c) => c.status !== 'dropped')
   const byExpert = {}
   for (const c of live) (byExpert[c.expert] ||= []).push(c)
@@ -394,6 +407,7 @@ function renderReport({ verdict, consensus, matrix, date, panel, narrative, fail
   return [
     `# Plan Readiness Review — ${date || ''}`,
     `\n**Verdict: ${verdict}**  \nPanel: ${panel.join(', ')}  \nAgreed gaps — ${counts}`,
+    parseBlock,
     failedBlock,
     narrative ? `\n${narrative}` : '',
     '\n## Spec ↔ Plan coverage', renderCoverage(matrix),
@@ -405,7 +419,7 @@ function renderReport({ verdict, consensus, matrix, date, panel, narrative, fail
 
 phase('Decide')
 const consensus = foldConsensus(gaps, allReactions)
-const verdict = computeVerdict(consensus, matrix)
+const verdict = computeVerdict(consensus, matrix, planTaskCount)
 const added = allReactions.filter((r) => r.stance === 'add')
 // Optional one-paragraph narrative from a synthesis agent (best-effort).
 const synth = await agent(
@@ -416,6 +430,6 @@ const narrative = typeof synth === 'string' ? synth : ''
 
 const report = renderReport({
   verdict, consensus, matrix, date: a.date, panel: roster.map((e) => e.key),
-  narrative, failedExperts, added,
+  narrative, failedExperts, added, planTaskCount,
 })
 return { report, verdict, consensus, matrix, panel: roster.map((e) => e.key), failedExperts }

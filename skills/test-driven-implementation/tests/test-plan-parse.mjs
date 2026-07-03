@@ -30,4 +30,13 @@ assert.deepEqual(tasks[0].files, ['src/a.js', 'tests/a.test.js'], 'files, no bac
 assert.deepEqual(tasks[1].files, ['src/b.js'], 'line-range stripped')
 assert.deepEqual(tasks[1].deps, [1], 'explicit dep parsed')
 assert.deepEqual(tasks[0].deps, [], 'no deps when none stated')
+// Contract characterization: a plan whose headings miss the grammar parses to ZERO tasks
+// (silently). The SKILL.md must STOP on this — this test pins the behavior that makes
+// the STOP necessary.
+{
+  const wrong = `# Plan\n\n## Task 1: wrong level\n\nFiles affected: src/a.js\n`
+  const { tasks } = parsePlan(wrong)
+  assert.equal(tasks.length, 0, 'non-grammar headings yield zero tasks, no error')
+}
+
 console.log('plan-parse: PASS')
