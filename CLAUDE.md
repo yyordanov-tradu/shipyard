@@ -23,6 +23,25 @@ are gates (they judge); the others are generative stages (they build).
   test framework. Each prints `<name>: PASS` on success.
 - Run the whole suite: `for t in skills/*/tests/test-*.mjs; do node "$t" || break; done`
 
+## Versioning (binding)
+
+**Every PR bumps the version.** The plugin ships from a local-directory marketplace, and
+`claude plugin update` only re-copies when the version **changes** — an unbumped version makes the
+update silently no-op, so your change never reaches the running plugin. A PR that forgets the bump
+is not done.
+
+Bump **`.claude-plugin/plugin.json`** and keep **`.claude-plugin/marketplace.json`**
+(`metadata.version`) in sync — the two must always match. Size the bump by blast radius (semver):
+
+- **MAJOR** (`x.0.0`) — a breaking change to an inter-stage **interface/artifact** (plan format,
+  verdict contract, workflow args) or removing/renaming a skill. Anything that breaks how stages
+  interoperate or how the plugin is invoked.
+- **MINOR** (`0.x.0`) — a new skill/stage, a new capability, or a backward-compatible feature
+  (e.g. a new optional arg).
+- **PATCH** (`0.0.x`) — bug fixes, prompt tweaks, refactors, docs, and tests with no interface change.
+
+After merge: `claude plugin update shipyard@shipyard-local` + restart Claude Code to load it.
+
 ## How a stage is built (the conventions)
 
 Each stage is a folder `skills/<name>/` containing:
