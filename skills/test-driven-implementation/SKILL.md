@@ -27,7 +27,17 @@ Serena (micro); Claude Code edits; ripgrep is the fallback.
 
 ## Step 2 — Stream analysis (graphify = the lead's macro tool)
 
-1. Parse tasks: `node "$LIB/plan-parse.mjs" "<plan-path>"`.
+1. Parse tasks: `node "$LIB/plan-parse.mjs" "<plan-path>"`. If it returns **zero tasks**,
+   **STOP** — the plan does not follow the task grammar (`### Task N: <title>` headings, a
+   `**Files:**` block with backticked paths, the literal "depends on Task N"). Tell the user
+   to fix the plan (or re-run `expert-advised-planning`); never guess a schedule from prose.
+   Example of a parseable task:
+   ```markdown
+   ### Task 2: Wire the widget API
+   **Files:**
+   - Modify: `src/api/routes.js`
+   This task depends on Task 1.
+   ```
 2. If graphify is installed, query it for dependency edges between the areas the tasks touch
    (macro question — graphify owns it; see the bible). Build `depEdges` as `[[fromId,toId],...]`
    and set `graphAvailable=true`. If graphify is absent, `graphAvailable=false` (bias to

@@ -39,7 +39,15 @@ If graphify is installed and `$proj` has code:
 graphify is absent, skip — the experts fall back to smart-explore/grep. Never block the
 review on this.
 
-## Step 4 — Run the workflow
+## Step 4 — Parse check (machine-readability)
+
+The implement stage machine-reads the plan. Run the canonical parser:
+`node "${CLAUDE_PLUGIN_ROOT}/skills/test-driven-implementation/lib/plan-parse.mjs" "<plan-path>"`
+and count `tasks`. Pass that number as `planTaskCount` below — **0 forces NEEDS-WORK** (the
+engine adds a format-failure note to the report). If the parser itself errors, omit the key
+and continue; never block the review on this.
+
+## Step 5 — Run the workflow
 
 Invoke the **Workflow** tool:
 
@@ -54,16 +62,18 @@ Invoke the **Workflow** tool:
     "designDocs": "<architecture/design docs text>",
     "projectLangs": ["py", "ts"],
     "rosterOverride": null,
+    "planTaskCount": 4,
     "date": "<YYYY-MM-DD from `date -u +%F`>"
   }
   ```
+  `planTaskCount` = the task count from Step 4 (omit the key if the parser errored).
   Set `rosterOverride` to an array of agent names only if the user named a roster (e.g.
   `/plan-readiness-review … security-auditor,python-pro`).
 
 The workflow returns `{ report, verdict, consensus, matrix, panel, failedExperts }`. If `report`
 is missing or empty, show the error and STOP — never write an empty review.
 
-## Step 5 — Save and summarize
+## Step 6 — Save and summarize
 
 1. Slug: the plan filename without extension, non-alphanumerics -> `-`.
 2. `mkdir -p "$proj/docs/reviews"` and write `report` to

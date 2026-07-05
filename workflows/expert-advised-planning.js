@@ -219,6 +219,9 @@ if (DRAFT_MODE) {
 }
 
 // ---------- shipyard's own plan-format guide (no external dependency) ----------
+// The TASK GRAMMAR below is a binding inter-stage contract: test-driven-implementation
+// machine-reads the plan with lib/plan-parse.mjs, which keys on exactly these shapes.
+// tests/test-plan-format.mjs round-trips the example through that parser — keep them in step.
 const PLAN_FORMAT_GUIDE = `
 Write the plan so an engineer with zero context for this codebase can execute it.
 - Bite-sized steps: each step is one 2-5 minute action.
@@ -230,6 +233,26 @@ Write the plan so an engineer with zero context for this codebase can execute it
 - NO placeholders: never write "TBD", "add error handling", "handle edge cases", or
   "same as above". Write the actual content.
 - DRY, YAGNI, frequent commits.
+
+TASK GRAMMAR (binding — a machine parses the plan; deviate and the tasks are invisible):
+- Every task starts with a level-3 heading, exactly: \`### Task N: <short title>\` (N = 1, 2, 3...).
+- Right under the heading, a \`**Files:**\` block: one \`- Create:\` / \`- Modify:\` / \`- Test:\`
+  bullet per file, every path in backticks.
+- A task that must wait for another says so with the literal phrase "depends on Task N"
+  (any other wording is NOT parsed and the tasks will be scheduled in parallel).
+Example — follow this shape exactly:
+
+### Task 1: Add the widget store
+**Files:**
+- Create: \`src/store/widget.js\`
+- Test: \`tests/store/widget.test.js\`
+(steps...)
+
+### Task 2: Wire the widget API
+**Files:**
+- Modify: \`src/api/routes.js\`
+This task depends on Task 1.
+(steps...)
 `
 
 // ---------- DRAFT ----------
