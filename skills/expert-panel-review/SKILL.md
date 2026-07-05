@@ -80,6 +80,20 @@ contains the code being reviewed, so no worktree is needed. Leave `/tmp/epr-ci.t
 empty in these modes: a local, unpushed diff has no CI run to read, and the workflow
 treats empty `ciStatus` as "no CI line."
 
+**All modes — collect the CI/build config** (static repo files, so this works even with
+no CI run; it lets the panel audit what a green check actually *verifies* instead of
+trusting it):
+```bash
+: > /tmp/epr-ciconfig.txt
+for f in "$proj"/.github/workflows/*.yml "$proj"/.github/workflows/*.yaml \
+         "$proj"/tsup.config.* "$proj"/vite.config.* "$proj"/rollup.config.* \
+         "$proj"/webpack.config.* "$proj"/esbuild.config.*; do
+  [ -f "$f" ] && { printf '=== %s ===\n' "${f#"$proj"/}"; cat "$f"; } >> /tmp/epr-ciconfig.txt
+done
+```
+Empty is fine — the workflow skips the CI-coverage audit when there is no config to read.
+This is read-only input for static reasoning; the panel still never runs the build.
+
 **Also record the base for repo mode.** Set `baseRef` to the merge-base SHA you diffed
 against, so the engine can re-derive each file's change from the repo without the whole
 diff being inlined:
@@ -194,8 +208,9 @@ If there are none, the file is empty — that is fine; the workflow treats empty
 ## Step 4 — Run the workflow
 
 Read `/tmp/epr-diff.txt`, `/tmp/epr-files.txt`, `/tmp/epr-rules.txt`,
-`/tmp/epr-designdocs.txt`, `/tmp/epr-ci.txt` (PR mode; empty otherwise), and get the
-date with `date -u +%F`. Then invoke the **Workflow** tool:
+`/tmp/epr-designdocs.txt`, `/tmp/epr-ci.txt` (PR mode; empty otherwise),
+`/tmp/epr-ciconfig.txt`, and get the date with `date -u +%F`. Then invoke the
+**Workflow** tool:
 
 - `scriptPath`: `${CLAUDE_PLUGIN_ROOT}/workflows/expert-panel-review.js`
 - `args`: a JSON object:
@@ -208,6 +223,7 @@ date with `date -u +%F`. Then invoke the **Workflow** tool:
     "rules": "<contents of /tmp/epr-rules.txt>",
     "designDocs": "<contents of /tmp/epr-designdocs.txt>",
     "ciStatus": "<contents of /tmp/epr-ci.txt; empty string in default/paths mode>",
+    "ciConfig": "<contents of /tmp/epr-ciconfig.txt; empty string if none found>",
     "testCommand": "<the target repo's test command, for OPTIONAL reproduction — e.g. 'npm test', 'pytest'; '' if none>",
     "date": "<YYYY-MM-DD>"
   }
@@ -232,7 +248,9 @@ date with `date -u +%F`. Then invoke the **Workflow** tool:
 
 **How the engine reviews (for context):** it partitions the change into units (one per file),
 gives each unit an expert-matched reviewer, runs a whole-change cross-cutting tier
-(security/integration/architecture/performance + compliance), unions findings deterministically,
+(security/integration/architecture/performance + compliance — the integration lane also audits
+CI coverage: a green check whose assertion is weaker than the risk it guards is itself a
+finding, with the CI step that would close it), unions findings deterministically,
 then verifies each by EVIDENCE — a finding is dropped only on cited counter-evidence, and a
 Critical/High is never silently dropped (a cited-refuted one is marked "suppressed — needs human
 eyes" but still blocks). The verdict and report are assembled deterministically (byte-stable).
