@@ -21,7 +21,7 @@ are gates (they judge); the others are generative stages (they build).
 - **Plain JavaScript ESM (`.mjs`/`.js`), Node ≥18, zero npm dependencies, no TypeScript.**
 - Tests are standalone `.mjs` files using `node:assert/strict`, run directly with `node` — no
   test framework. Each prints `<name>: PASS` on success.
-- Run the whole suite: `for t in skills/*/tests/test-*.mjs; do node "$t" || break; done`
+- Run the whole suite: `for t in skills/*/tests/test-*.mjs lib/tests/test-*.mjs; do node "$t" || break; done`
 
 ## Versioning (binding)
 
