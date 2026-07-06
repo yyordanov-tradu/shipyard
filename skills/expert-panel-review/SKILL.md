@@ -159,15 +159,31 @@ set. Never hand-trim the diff text.
 ## Step 3 — Source the project rules (for the compliance lane)
 
 ```bash
-if [ -f "$proj/.claude/expert-review-rules.md" ]; then
-  head -c 8000 "$proj/.claude/expert-review-rules.md" > /tmp/epr-rules.txt
-else
-  { cat "$proj/CLAUDE.md" 2>/dev/null; cat "$proj"/docs/rules/*.md 2>/dev/null; } \
-    | head -c 8000 > /tmp/epr-rules.txt
+# Prefer the canonical per-repo conventions: .claude/rules/*.md (via the shared helper).
+rules_json="$(node "${CLAUDE_PLUGIN_ROOT}/lib/collect-rules.mjs" "$proj")"
+: > /tmp/epr-rules.txt
+# Stack hint first, so reviewers know which conventions apply.
+stack="$(printf '%s' "$rules_json" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s);process.stdout.write((j.stack||[]).join(", "))})')"
+[ -n "$stack" ] && printf 'stack: %s\n\n' "$stack" >> /tmp/epr-rules.txt
+# Rule bodies from .claude/rules/*.md.
+printf '%s' "$rules_json" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{const j=JSON.parse(s);for(const r of (j.rules||[]))process.stdout.write("=== "+r.name+" ===\n"+r.content+"\n\n")})' >> /tmp/epr-rules.txt
+# Fallback: no .claude/rules/ → keep the previous sources so existing repos still work.
+if [ ! -s /tmp/epr-rules.txt ]; then
+  if [ -f "$proj/.claude/expert-review-rules.md" ]; then
+    head -c 8000 "$proj/.claude/expert-review-rules.md" > /tmp/epr-rules.txt
+  else
+    { cat "$proj/CLAUDE.md" 2>/dev/null; cat "$proj"/docs/rules/*.md 2>/dev/null; } \
+      | head -c 8000 > /tmp/epr-rules.txt
+  fi
 fi
+# Cap the size so a huge rules set cannot blow the reviewer prompt.
+head -c 8000 /tmp/epr-rules.txt > /tmp/epr-rules.cap && mv /tmp/epr-rules.cap /tmp/epr-rules.txt
 ```
-If the result is empty, the workflow simply skips the compliance lane — that is
-expected for projects with no written rules.
+Sources, in order of precedence: the target repo's `.claude/rules/*.md` (the canonical location —
+read via `${CLAUDE_PLUGIN_ROOT}/lib/collect-rules.mjs`, prefixed with a `stack:` hint), then, only
+if that is empty, the legacy fallbacks (`.claude/expert-review-rules.md`, else `CLAUDE.md` +
+`docs/rules/*.md`). If everything is empty the workflow simply skips the compliance lane — expected
+for projects with no written rules. The `rules` workflow arg is unchanged; only its source changed.
 
 ### Collect the design docs (ADRs / specs)
 
