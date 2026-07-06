@@ -45,6 +45,12 @@ Serena (micro); Claude Code edits; ripgrep is the fallback.
 3. Partition: `node "$LIB/streams.mjs" "<plan-path>" '<depEdgesJson>' [--graph]`. Print the
    resulting streams, `parallel`, and `conviction` so the user sees the execution shape before
    any code is written.
+4. **Collect project conventions (once).** Run
+   `node "${CLAUDE_PLUGIN_ROOT}/lib/collect-rules.mjs" "$(git rev-parse --show-toplevel)"`.
+   It returns `{ stack, rules }` from the target repo's `.claude/rules/*.md` (see the tooling
+   bible). Print a one-line summary — e.g. `conventions: stack node · 3 rule file(s)`, or
+   `conventions: none found — stack defaults` when `rules` is empty. Empty is fine and means the
+   build behaves exactly as before. Keep the returned `stack` and `rules` for the subagent contract.
 
 ## Step 3 — Build the tasks
 
@@ -62,6 +68,10 @@ Create/use a **feature branch** (the integration target). Then, per the schedule
 Give each subagent only:
 - its **own task block** (full), the plan's **shared header**, and a **text slice** of your
   graphify orientation (where this change sits) — never other tasks' text;
+- the **project conventions** collected in Step 2: the `stack` label (a one-line "this is a
+  <stack> repo" hint) and the full text of each `.claude/rules/*.md` file, given as **binding
+  conventions to follow** while writing code. If none were found, say "no project rules — stack
+  defaults" so the subagent knows the standard is its own good judgement, not a missing input;
 - tools: **Serena** retrieval for symbol/structure visibility — `get_symbols_overview` (map a
   file/module's structure before touching it), `find_symbol` (jump to an exact definition),
   `find_referencing_symbols` (every caller), `get_diagnostics_for_file` (types/errors) — plus
@@ -81,7 +91,10 @@ return `{branch, status}`.
 
 Before committing a task, confirm the verify gate passed (green, clean diagnostics) and sanity-
 check the diff against the task's intent. A plainly off-intent diff is a failure (retry, then
-escalate). Deep review is the **code gate's** job — do not duplicate it here. Commit per task:
+escalate). Also check the diff against the project conventions from Step 2: a change that
+**plainly** violates a stated rule (e.g. the repo's naming or error-handling convention) is a
+failure — retry, then escalate, the same as an off-intent diff. Keep this light: no rule parsing,
+just catch blatant breaks. Deep review is the **code gate's** job — do not duplicate it here. Commit per task:
 `Task N: <desc>`.
 
 ## Step 5 — Failure and conflicts (escalate, never guess)
